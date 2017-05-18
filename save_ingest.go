@@ -8,12 +8,14 @@ import (
 	"unsafe"
 )
 
-func (nemo *NEMO) RangeDel(start []byte, end []byte, limit int64) error {
+func (nemo *NEMO) RawScanSaveRange(path string, start []byte, end []byte, use_snapshot bool) error {
 	var cErr *C.char
-	C.nemo_RangeDel(nemo.c,
+	cPath := C.CString(path)
+	C.nemo_RawScanSaveAll(nemo.c,
+		cPath,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
-		C.uint64_t(limit),
+		C.bool(use_snapshot),
 		&cErr,
 	)
 	if cErr != nil {
@@ -24,14 +26,10 @@ func (nemo *NEMO) RangeDel(start []byte, end []byte, limit int64) error {
 	return nil
 }
 
-func (nemo *NEMO) RangeDelWithHandle(db *DBNemo, start []byte, end []byte, limit int64) error {
+func (nemo *NEMO) IngestFile(path string) error {
 	var cErr *C.char
-	C.nemo_RangeDelWithHandle(nemo.c, db.c,
-		goByte2char(start), C.size_t(len(start)),
-		goByte2char(end), C.size_t(len(end)),
-		C.uint64_t(limit),
-		&cErr,
-	)
+	cPath := C.CString(path)
+	C.nemo_IngestFile(nemo.c, cPath, &cErr)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))

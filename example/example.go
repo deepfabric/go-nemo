@@ -1,8 +1,8 @@
 package main
 
-// #cgo LDFLAGS: -lstdc++ -lsnappy
+// #cgo LDFLAGS: -lstdc++ -lsnappy -ljemalloc
 // #cgo darwin LDFLAGS: -Wl,-undefined -Wl,dynamic_lookup
-// #cgo !darwin LDFLAGS: -Wl,-unresolved-symbols=ignore-all -lrt
+// #cgo !darwin LDFLAGS: -Wl,-unresolved-symbols=ignore-all -lrt -lpthread
 // #include <stdlib.h>
 import "C"
 import (
@@ -13,7 +13,7 @@ import (
 
 func main() {
 	opts := gonemo.NewDefaultOptions()
-	n := gonemo.OpenNemo(opts, "/tmp/rocksdb")
+	n := gonemo.OpenNemo(opts, "/tmp/go-nemo/")
 	key := []byte("Hello")
 	field := []byte("Hello")
 	value := []byte("World")
@@ -86,10 +86,8 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
-
-	Hkey := []byte("H1")
 	//HSet
-
+	Hkey := []byte("H1")
 	err = n.HSet(Hkey, field, value)
 	if err == nil {
 		fmt.Print("success to HSet!")
@@ -112,7 +110,6 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
-
 	//HMset
 	err = n.HMSet(Hkey, fields, vals)
 	if err != nil {
@@ -133,7 +130,6 @@ func main() {
 			fmt.Printf("get value[%d] wrong\n", i)
 		}
 	}
-
 	//List Push
 	len, err := n.LPush([]byte("List1"), []byte("world"))
 	if err == nil {
@@ -160,7 +156,7 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
-
+	//handle
 	h1 := n.GetMetaHandle()
 	err = n.PutWithHandle(h1, key, value)
 	if err != nil {
@@ -176,7 +172,12 @@ func main() {
 		fmt.Println("key:" + string(key))
 		fmt.Println("value:" + string(value))
 	}
-
+	err = n.DeleteWithHandle(h1, key)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to DeleteWithHandle")
+	}
 	wb := gonemo.NewWriteBatch()
 	wb.WriteBatchPut([]byte("BK1"), []byte("V1"))
 	wb.WriteBatchPut([]byte("BK2"), []byte("V2"))
@@ -188,23 +189,46 @@ func main() {
 		fmt.Println("success to BatchWrite")
 	}
 
-	it := n.NewVolumeIterator([]byte("A"), []byte("x"), 100)
-	for ; it.Valid(); it.Next() {
-		fmt.Println("volume iterator key:" + string(it.Key()))
-		fmt.Println(it.Value())
+	rit := n.RawScanWithHanlde(h1, true)
+	rit.Seek([]byte("BK1"))
+	for ; rit.Valid(); rit.Next() {
+		fmt.Println("raw iterator key:" + string(rit.Key()))
+		fmt.Println("raw iterator val:" + string(rit.Value()))
 	}
-	it.Free()
+	rit.Free()
 
-	kit := n.KScanWithHandle(h1, []byte("A"), []byte("x"), 100)
-	for ; kit.Valid(); it.Next() {
+	vit := n.NewVolumeIterator([]byte("A"), []byte("x"), 100)
+	for ; vit.Valid(); vit.Next() {
+		fmt.Println("volume iterator key:" + string(vit.Key()))
+		fmt.Println(vit.Value())
+	}
+	vit.Free()
+
+	kit := n.KScan([]byte("A"), []byte("x"), 100)
+	for ; kit.Valid(); kit.Next() {
 		fmt.Println("kviterator key:" + string(kit.Key()))
 		fmt.Println("kviterator value:" + string(kit.Value()))
 	}
 	kit.Free()
 
-	n.RangeDel([]byte("A"), []byte("x"), 100)
-	n.RangeDelWithHandle(h1, []byte("A"), []byte("x"), 100)
-
+	err = n.RawScanSaveRange("/tmp/go-nemo-bak/", []byte("A"), []byte("zz"), true)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to RawScanSaveRange")
+	}
+	err = n.RangeDel([]byte("A"), []byte("zz"), 100)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to RangeDel")
+	}
+	err = n.RangeDelWithHandle(h1, []byte("A"), []byte("zz"), 100)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to RangeDelWithHandle")
+	}
 	/*
 		snapshots, err := n.BGSaveGetSnapshot()
 		if err == nil {
@@ -238,8 +262,40 @@ func main() {
 			return
 		}
 	*/
-
 	n.Close()
+
+	opts = gonemo.NewDefaultOptions()
+	n = gonemo.OpenNemo(opts, "/tmp/go-nemo/")
+
+	err = n.IngestFile("/tmp/go-nemo-bak/")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to IngestFile")
+	}
+
+	h1 = n.GetMetaHandle()
+	rit = n.RawScanWithHanlde(h1, true)
+	rit.Seek([]byte("BK1"))
+	for ; rit.Valid(); rit.Next() {
+		fmt.Println("raw iterator key:" + string(rit.Key()))
+		fmt.Println("raw iterator val:" + string(rit.Value()))
+	}
+	rit.Free()
+
+	vit = n.NewVolumeIterator([]byte("A"), []byte("x"), 100)
+	for ; vit.Valid(); vit.Next() {
+		fmt.Println("volume iterator key:" + string(vit.Key()))
+		fmt.Println(vit.Value())
+	}
+	vit.Free()
+
+	kit = n.KScan([]byte("A"), []byte("x"), 100)
+	for ; kit.Valid(); kit.Next() {
+		fmt.Println("kviterator key:" + string(kit.Key()))
+		fmt.Println("kviterator value:" + string(kit.Value()))
+	}
+	kit.Free()
 
 }
 

@@ -10,13 +10,16 @@ import (
 type KIterator struct {
 	c *C.nemo_KIterator_t
 }
+type RawIterator struct {
+	c *C.nemo_RawIterator_t
+}
 type VolumeIterator struct {
 	c *C.nemo_VolumeIterator_t
 }
 
-func (nemo *NEMO) KScanWithHandle(db *DBWithTTL, start []byte, end []byte, limit int64) *KIterator {
+func (nemo *NEMO) KScan(start []byte, end []byte, limit int64) *KIterator {
 	var it KIterator
-	it.c = C.nemo_KScanWithHandle(nemo.c, db.c,
+	it.c = C.nemo_KScan(nemo.c,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
 		C.uint64_t(limit), C.bool(false),
@@ -54,6 +57,48 @@ func (it *KIterator) Value() []byte {
 
 func (it *KIterator) Free() {
 	C.KIteratorFree(it.c)
+}
+
+func (nemo *NEMO) RawScanWithHanlde(db *DBNemo, use_snapshot bool) *RawIterator {
+	var it RawIterator
+	it.c = C.nemo_RawScanWithHandle(nemo.c, db.c, C.bool(false))
+	return &it
+}
+
+func (it *RawIterator) Next() {
+	C.RawNext(it.c)
+}
+
+func (it *RawIterator) Valid() bool {
+	return bool(C.RawValid(it.c))
+}
+
+func (it *RawIterator) Key() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	C.RawKey(it.c, &cRes, &cLen)
+	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
+	C.free(unsafe.Pointer(cRes))
+	return res
+}
+
+func (it *RawIterator) Value() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	C.RawValue(it.c, &cRes, &cLen)
+	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
+	C.free(unsafe.Pointer(cRes))
+	return res
+}
+
+func (it *RawIterator) Seek(key []byte) {
+	C.RawSeek(it.c, goByte2char(key), C.size_t(len(key)))
+}
+
+func (it *RawIterator) Free() {
+	C.RawIteratorFree(it.c)
 }
 
 func (nemo *NEMO) NewVolumeIterator(start []byte, end []byte, limit int64) *VolumeIterator {
