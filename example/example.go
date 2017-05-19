@@ -88,12 +88,14 @@ func main() {
 	}
 	//HSet
 	Hkey := []byte("H1")
-	err = n.HSet(Hkey, field, value)
+	err, HSet_res := n.HSet(Hkey, field, value)
 	if err == nil {
 		fmt.Print("success to HSet!")
 		fmt.Println("key:" + string("H1"))
 		fmt.Println("field:" + string(field))
 		fmt.Println("value:" + string(value))
+		fmt.Print("HSet_res:")
+		fmt.Println(HSet_res)
 	} else {
 		fmt.Println(err)
 	}
@@ -111,7 +113,7 @@ func main() {
 		fmt.Println(err)
 	}
 	//HMset
-	err = n.HMSet(Hkey, fields, vals)
+	err, _ = n.HMSet(Hkey, fields, vals)
 	if err != nil {
 		fmt.Println(err)
 	} else {

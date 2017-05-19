@@ -8,28 +8,26 @@ import (
 	"unsafe"
 )
 
-func (nemo *NEMO) HSet(key []byte, field []byte, value []byte) error {
-	var (
-		cErr *C.char
-	)
+func (nemo *NEMO) HSet(key []byte, field []byte, value []byte) (error, int) {
+	var cErr *C.char
+	var iExist C.int
 	C.nemo_HSet(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		goByte2char(field), C.size_t(len(field)),
 		goByte2char(value), C.size_t(len(value)),
+		&iExist,
 		&cErr,
 	)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return res
+		return res, 0
 	}
-	return nil
+	return nil, int(iExist)
 }
 
 func (nemo *NEMO) HGet(key []byte, field []byte) ([]byte, error) {
-	var (
-		cErr *C.char
-	)
+	var cErr *C.char
 	var cVal *C.char
 	var cLen C.size_t
 	C.nemo_HGet(nemo.c,
@@ -49,9 +47,7 @@ func (nemo *NEMO) HGet(key []byte, field []byte) ([]byte, error) {
 }
 
 func (nemo *NEMO) HDel(key []byte, field []byte) error {
-	var (
-		cErr *C.char
-	)
+	var cErr *C.char
 	C.nemo_HDel(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		goByte2char(field), C.size_t(len(field)),
@@ -174,16 +170,18 @@ func (nemo *NEMO) HMGet(key []byte, fields [][]byte) ([][]byte, []error) {
 	return cSlice2MultiByte(l, cvallist, cvallen), errs
 }
 
-func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) error {
+func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) (error, []int) {
 	var cErr *C.char
 	l := len(fields)
 	if len(vals) != l {
-		return errors.New("key len != val len")
+		return errors.New("key len != val len"), nil
 	}
 	cfieldlist := make([]*C.char, l)
 	cfieldlen := make([]C.size_t, l)
 	cvallist := make([]*C.char, l)
 	cvallen := make([]C.size_t, l)
+	creslist := make([]C.int, l)
+	goreslist := make([]int, l)
 
 	for i, field := range fields {
 		cfieldlist[i] = goBytedup2char(field)
@@ -199,6 +197,7 @@ func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) error {
 		(*C.size_t)(unsafe.Pointer(&cfieldlen[0])),
 		(**C.char)(unsafe.Pointer(&cvallist[0])),
 		(*C.size_t)(unsafe.Pointer(&cvallen[0])),
+		(*C.int)(unsafe.Pointer(&creslist[0])),
 		&cErr,
 	)
 
@@ -212,9 +211,14 @@ func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) error {
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return res
+		return res, nil
 	}
-	return nil
+
+	for i, _ := range goreslist {
+		goreslist[i] = int(creslist[i])
+	}
+
+	return nil, goreslist
 }
 
 func (nemo *NEMO) HSetnx(key []byte, field []byte, value []byte) error {
