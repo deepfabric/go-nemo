@@ -101,12 +101,12 @@ func (it *RawIterator) Free() {
 	C.RawIteratorFree(it.c)
 }
 
-func (nemo *NEMO) NewVolumeIterator(start []byte, end []byte, limit int64) *VolumeIterator {
+func (nemo *NEMO) NewVolumeIterator(start []byte, end []byte) *VolumeIterator {
 	var it VolumeIterator
 	it.c = C.createVolumeIterator(nemo.c,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
-		C.uint64_t(limit), C.bool(false),
+		C.bool(false),
 	)
 	return &it
 }

@@ -197,7 +197,7 @@ func main() {
 	}
 	rit.Free()
 
-	vit := n.NewVolumeIterator([]byte("A"), []byte("x"), 100)
+	vit := n.NewVolumeIterator([]byte("A"), []byte("x"))
 	for ; vit.Valid(); vit.Next() {
 		fmt.Println("volume iterator key:" + string(vit.Key()))
 		fmt.Println(vit.Value())
@@ -217,13 +217,13 @@ func main() {
 	} else {
 		fmt.Println("success to RawScanSaveRange")
 	}
-	err = n.RangeDel([]byte("A"), []byte("zz"), 100)
+	err = n.RangeDel([]byte("A"), []byte("zz"))
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println("success to RangeDel")
 	}
-	err = n.RangeDelWithHandle(h1, []byte("A"), []byte("zz"), 100)
+	err = n.RangeDelWithHandle(h1, []byte("A"), []byte("zz"))
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -283,7 +283,7 @@ func main() {
 	}
 	rit.Free()
 
-	vit = n.NewVolumeIterator([]byte("A"), []byte("x"), 100)
+	vit = n.NewVolumeIterator([]byte("A"), []byte("x"))
 	for ; vit.Valid(); vit.Next() {
 		fmt.Println("volume iterator key:" + string(vit.Key()))
 		fmt.Println(vit.Value())
