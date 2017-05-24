@@ -19,7 +19,7 @@ func (wb *WriteBatch) WriteBatchPut(key []byte, value []byte) {
 	C.rocksdb_WriteBatch_Put(wb.c, goByte2char(key), C.size_t(len(key)), goByte2char(value), C.size_t(len(value)))
 }
 
-func (wb *WriteBatch) WriteBatchDel(key []byte, value []byte) {
+func (wb *WriteBatch) WriteBatchDel(key []byte) {
 
-	C.rocksdb_WriteBatch_Del(wb.c, goByte2char(key), C.size_t(len(key)), goByte2char(value), C.size_t(len(value)))
+	C.rocksdb_WriteBatch_Del(wb.c, goByte2char(key), C.size_t(len(key)))
 }

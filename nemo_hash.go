@@ -46,28 +46,50 @@ func (nemo *NEMO) HGet(key []byte, field []byte) ([]byte, error) {
 	return val, nil
 }
 
-func (nemo *NEMO) HDel(key []byte, field []byte) error {
+func (nemo *NEMO) HDel(key []byte, fields ...[]byte) (int64, error) {
 	var cErr *C.char
-	C.nemo_HDel(nemo.c,
+	var cRes C.int64_t
+
+	l := len(fields)
+
+	cfieldlist := make([]*C.char, l)
+	cfieldlen := make([]C.size_t, l)
+
+	for i, field := range fields {
+		cfieldlist[i] = goBytedup2char(field)
+		cfieldlen[i] = C.size_t(len(field))
+	}
+
+	C.nemo_HMDel(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
-		goByte2char(field), C.size_t(len(field)),
+		C.int(l),
+		(**C.char)(unsafe.Pointer(&cfieldlist[0])),
+		(*C.size_t)(unsafe.Pointer(&cfieldlen[0])),
+		&cRes,
 		&cErr,
 	)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return res
+		return 0, res
 	}
-	return nil
+	return int64(cRes), nil
 }
 
-func (nemo *NEMO) HExists(key []byte, field []byte) bool {
-
-	res := C.nemo_HExists(nemo.c,
+func (nemo *NEMO) HExists(key []byte, field []byte) (bool, error) {
+	var cIfExist C.bool
+	var cErr *C.char
+	C.nemo_HExists(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		goByte2char(field), C.size_t(len(field)),
+		&cIfExist, &cErr,
 	)
-	return bool(res)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return false, res
+	}
+	return bool(cIfExist), nil
 }
 
 func (nemo *NEMO) HKeys(key []byte) ([][]byte, error) {
@@ -129,9 +151,16 @@ func (nemo *NEMO) HGetall(key []byte) ([][]byte, [][]byte, error) {
 	}
 }
 
-func (nemo *NEMO) HLen(key []byte) int64 {
-	cLen := C.nemo_HLen(nemo.c, goByte2char(key), C.size_t(len(key)))
-	return int64(cLen)
+func (nemo *NEMO) HLen(key []byte) (int64, error) {
+	var cLen C.int64_t
+	var cErr *C.char
+	C.nemo_HLen(nemo.c, goByte2char(key), C.size_t(len(key)), &cLen, &cErr)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, res
+	}
+	return int64(cLen), nil
 }
 
 func (nemo *NEMO) HMGet(key []byte, fields [][]byte) ([][]byte, []error) {
@@ -221,29 +250,36 @@ func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) (error, []in
 	return nil, goreslist
 }
 
-func (nemo *NEMO) HSetnx(key []byte, field []byte, value []byte) error {
-	var (
-		cErr *C.char
-	)
+func (nemo *NEMO) HSetnx(key []byte, field []byte, value []byte) (int64, error) {
+	var cErr *C.char
+	var cRes C.int64_t
 	C.nemo_HSetnx(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		goByte2char(field), C.size_t(len(field)),
 		goByte2char(value), C.size_t(len(value)),
-		&cErr,
+		&cRes, &cErr,
 	)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return res
+		return 0, res
 	}
-	return nil
+	return int64(cRes), nil
 }
 
-func (nemo *NEMO) HStrlen(key []byte, field []byte) int64 {
-	cLen := C.nemo_HStrlen(nemo.c, goByte2char(key), C.size_t(len(key)),
+func (nemo *NEMO) HStrlen(key []byte, field []byte) (int64, error) {
+	var cLen C.int64_t
+	var cErr *C.char
+	C.nemo_HStrlen(nemo.c, goByte2char(key), C.size_t(len(key)),
 		goByte2char(field), C.size_t(len(field)),
+		&cLen, &cErr,
 	)
-	return int64(cLen)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, res
+	}
+	return int64(cLen), nil
 }
 
 func (nemo *NEMO) HIncrby(key []byte, field []byte, by int64) ([]byte, error) {

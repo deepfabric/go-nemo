@@ -26,14 +26,33 @@ func (nemo *NEMO) ZAdd(key []byte, score float64, member []byte) (int64, error) 
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) ZCard(key []byte) int64 {
-	size := C.nemo_ZCard(nemo.c, goByte2char(key), C.size_t(len(key)))
-	return int64(size)
+func (nemo *NEMO) ZCard(key []byte) (int64, error) {
+	var cSize C.int64_t
+	var cErr *C.char
+	C.nemo_ZCard(nemo.c, goByte2char(key), C.size_t(len(key)), &cSize, &cErr)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, res
+	}
+	return int64(cSize), nil
 }
 
-func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo, bool, IsRo bool) int64 {
-	size := C.nemo_ZCount(nemo.c, goByte2char(key), C.size_t(len(key)), C.double(begin), C.double(end), C.bool(IsLo), C.bool(IsRo))
-	return int64(size)
+func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo, bool, IsRo bool) (int64, error) {
+	var cSize C.int64_t
+	var cErr *C.char
+	C.nemo_ZCount(nemo.c, goByte2char(key), C.size_t(len(key)),
+		C.double(begin), C.double(end),
+		&cSize,
+		C.bool(IsLo), C.bool(IsRo),
+		&cErr,
+	)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, res
+	}
+	return int64(cSize), nil
 }
 
 func (nemo *NEMO) ZIncrby(key []byte, member []byte, by float64) ([]byte, error) {
@@ -207,12 +226,24 @@ func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, is_lo bool, 
 	}
 }
 
-func (nemo *NEMO) ZRem(key []byte, member []byte) (int64, error) {
+func (nemo *NEMO) ZRem(key []byte, members ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
-	C.nemo_ZRem(nemo.c,
+	l := len(members)
+
+	cmemberlist := make([]*C.char, l)
+	cmemberlen := make([]C.size_t, l)
+
+	for i, member := range members {
+		cmemberlist[i] = goBytedup2char(member)
+		cmemberlen[i] = C.size_t(len(member))
+	}
+
+	C.nemo_ZMRem(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
-		goByte2char(member), C.size_t(len(member)),
+		C.int(l),
+		(**C.char)(unsafe.Pointer(&cmemberlist[0])),
+		(*C.size_t)(unsafe.Pointer(&cmemberlen[0])),
 		&cRes,
 		&cErr,
 	)

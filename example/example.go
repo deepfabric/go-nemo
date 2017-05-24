@@ -183,7 +183,7 @@ func main() {
 	wb := gonemo.NewWriteBatch()
 	wb.WriteBatchPut([]byte("BK1"), []byte("V1"))
 	wb.WriteBatchPut([]byte("BK2"), []byte("V2"))
-	wb.WriteBatchDel([]byte("BK2"), []byte("V2"))
+	wb.WriteBatchDel([]byte("BK2"))
 	err = n.BatchWrite(h1, wb)
 	if err != nil {
 		fmt.Println(err)
@@ -191,28 +191,43 @@ func main() {
 		fmt.Println("success to BatchWrite")
 	}
 
-	rit := n.RawScanWithHanlde(h1, true)
-	rit.Seek([]byte("BK1"))
-	for ; rit.Valid(); rit.Next() {
-		fmt.Println("raw iterator key:" + string(rit.Key()))
-		fmt.Println("raw iterator val:" + string(rit.Value()))
+	kit := n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
+	for ; kit.Valid(); kit.Next() {
+		fmt.Println("meta iterator key:" + string(kit.Key()))
+		fmt.Println("meta iterator val:" + string(kit.Value()))
 	}
-	rit.Free()
+	kit.Free()
 
+	nKey, nVal, err := n.SeekWithHandle(h1, []byte("A"))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to SeekWithHandle start: A")
+		fmt.Println("next key:" + string(nKey))
+		fmt.Println("next value:" + string(nVal))
+	}
+	nKey, nVal, err = n.SeekWithHandle(h1, []byte("x"))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to SeekWithHandle start: x")
+		fmt.Println("next key:" + string(nKey))
+		fmt.Println("next value:" + string(nVal))
+	}
 	vit := n.NewVolumeIterator([]byte("A"), []byte("x"))
 	for ; vit.Valid(); vit.Next() {
 		fmt.Println("volume iterator key:" + string(vit.Key()))
 		fmt.Println(vit.Value())
 	}
 	vit.Free()
-
-	kit := n.KScan([]byte("A"), []byte("x"), 100)
-	for ; kit.Valid(); kit.Next() {
-		fmt.Println("kviterator key:" + string(kit.Key()))
-		fmt.Println("kviterator value:" + string(kit.Value()))
-	}
-	kit.Free()
-
+	/*
+		kit := n.KScan([]byte("A"), []byte("x"), 100)
+		for ; kit.Valid(); kit.Next() {
+			fmt.Println("kviterator key:" + string(kit.Key()))
+			fmt.Println("kviterator value:" + string(kit.Value()))
+		}
+		kit.Free()
+	*/
 	err = n.RawScanSaveRange("/tmp/go-nemo-bak/", []byte("A"), []byte("zz"), true)
 	if err != nil {
 		fmt.Println(err)
@@ -276,15 +291,6 @@ func main() {
 		fmt.Println("success to IngestFile")
 	}
 
-	h1 = n.GetMetaHandle()
-	rit = n.RawScanWithHanlde(h1, true)
-	rit.Seek([]byte("BK1"))
-	for ; rit.Valid(); rit.Next() {
-		fmt.Println("raw iterator key:" + string(rit.Key()))
-		fmt.Println("raw iterator val:" + string(rit.Value()))
-	}
-	rit.Free()
-
 	vit = n.NewVolumeIterator([]byte("A"), []byte("x"))
 	for ; vit.Valid(); vit.Next() {
 		fmt.Println("volume iterator key:" + string(vit.Key()))
@@ -292,13 +298,22 @@ func main() {
 	}
 	vit.Free()
 
-	kit = n.KScan([]byte("A"), []byte("x"), 100)
+	h1 = n.GetMetaHandle()
+	kit = n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
 	for ; kit.Valid(); kit.Next() {
-		fmt.Println("kviterator key:" + string(kit.Key()))
-		fmt.Println("kviterator value:" + string(kit.Value()))
+		fmt.Println("raw iterator key:" + string(kit.Key()))
+		fmt.Println("raw iterator val:" + string(kit.Value()))
 	}
 	kit.Free()
 
+	/*
+		kit = n.KScan([]byte("A"), []byte("x"), 100)
+		for ; kit.Valid(); kit.Next() {
+			fmt.Println("kviterator key:" + string(kit.Key()))
+			fmt.Println("kviterator value:" + string(kit.Value()))
+		}
+		kit.Free()
+	*/
 }
 
 func Equal(slice1 []byte, slice2 []byte) bool {

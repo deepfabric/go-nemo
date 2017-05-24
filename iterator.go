@@ -4,27 +4,62 @@ package gonemo
 // #include <stdlib.h>
 import "C"
 import (
+	"errors"
 	"unsafe"
 )
 
 type KIterator struct {
 	c *C.nemo_KIterator_t
 }
-type RawIterator struct {
-	c *C.nemo_RawIterator_t
-}
 type VolumeIterator struct {
 	c *C.nemo_VolumeIterator_t
 }
 
-func (nemo *NEMO) KScan(start []byte, end []byte, limit int64) *KIterator {
-	var it KIterator
-	it.c = C.nemo_KScan(nemo.c,
+func (nemo *NEMO) KScanWithHandle(db *DBNemo, start []byte, end []byte, use_snapshot bool) *KIterator {
+	var kit KIterator
+	kit.c = C.nemo_KScanWithHandle(nemo.c, db.c,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
-		C.uint64_t(limit), C.bool(false),
+		C.bool(use_snapshot),
 	)
-	return &it
+	return &kit
+}
+
+func (nemo *NEMO) SeekWithHandle(db *DBNemo, start []byte) ([]byte, []byte, error) {
+	var cKey *C.char
+	var cKeyLen C.size_t
+	var cVal *C.char
+	var cValLen C.size_t
+	var cErr *C.char
+	var nKey []byte
+	var nVal []byte
+
+	C.nemo_SeekWithHandle(nemo.c, db.c,
+		goByte2char(start), C.size_t(len(start)),
+		&cKey, &cKeyLen,
+		&cVal, &cValLen,
+		&cErr,
+	)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return nil, nil, res
+	}
+	if cKeyLen != 0 {
+		nKey = C.GoBytes(unsafe.Pointer(cKey), C.int(cKeyLen))
+		C.free(unsafe.Pointer(cKey))
+	} else {
+		nKey = nil
+	}
+	if cValLen != 0 {
+		nVal = C.GoBytes(unsafe.Pointer(cVal), C.int(cValLen))
+		C.free(unsafe.Pointer(cVal))
+	} else {
+		nVal = nil
+	}
+
+	return nKey, nVal, nil
+
 }
 
 func (it *KIterator) Next() {
@@ -57,48 +92,6 @@ func (it *KIterator) Value() []byte {
 
 func (it *KIterator) Free() {
 	C.KIteratorFree(it.c)
-}
-
-func (nemo *NEMO) RawScanWithHanlde(db *DBNemo, use_snapshot bool) *RawIterator {
-	var it RawIterator
-	it.c = C.nemo_RawScanWithHandle(nemo.c, db.c, C.bool(false))
-	return &it
-}
-
-func (it *RawIterator) Next() {
-	C.RawNext(it.c)
-}
-
-func (it *RawIterator) Valid() bool {
-	return bool(C.RawValid(it.c))
-}
-
-func (it *RawIterator) Key() []byte {
-	var cRes *C.char
-	var cLen C.size_t
-
-	C.RawKey(it.c, &cRes, &cLen)
-	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	C.free(unsafe.Pointer(cRes))
-	return res
-}
-
-func (it *RawIterator) Value() []byte {
-	var cRes *C.char
-	var cLen C.size_t
-
-	C.RawValue(it.c, &cRes, &cLen)
-	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	C.free(unsafe.Pointer(cRes))
-	return res
-}
-
-func (it *RawIterator) Seek(key []byte) {
-	C.RawSeek(it.c, goByte2char(key), C.size_t(len(key)))
-}
-
-func (it *RawIterator) Free() {
-	C.RawIteratorFree(it.c)
 }
 
 func (nemo *NEMO) NewVolumeIterator(start []byte, end []byte) *VolumeIterator {

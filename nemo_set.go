@@ -8,12 +8,24 @@ import (
 	"unsafe"
 )
 
-func (nemo *NEMO) SAdd(key []byte, member []byte) (int64, error) {
+func (nemo *NEMO) SAdd(key []byte, members ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
-	C.nemo_SAdd(nemo.c,
+	l := len(members)
+
+	cmemberlist := make([]*C.char, l)
+	cmemberlen := make([]C.size_t, l)
+
+	for i, member := range members {
+		cmemberlist[i] = goBytedup2char(member)
+		cmemberlen[i] = C.size_t(len(member))
+	}
+
+	C.nemo_SMAdd(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
-		goByte2char(member), C.size_t(len(member)),
+		C.int(l),
+		(**C.char)(unsafe.Pointer(&cmemberlist[0])),
+		(*C.size_t)(unsafe.Pointer(&cmemberlen[0])),
 		&cRes,
 		&cErr,
 	)
@@ -25,12 +37,24 @@ func (nemo *NEMO) SAdd(key []byte, member []byte) (int64, error) {
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) SRem(key []byte, member []byte) (int64, error) {
+func (nemo *NEMO) SRem(key []byte, members ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
-	C.nemo_SRem(nemo.c,
+	l := len(members)
+
+	cmemberlist := make([]*C.char, l)
+	cmemberlen := make([]C.size_t, l)
+
+	for i, member := range members {
+		cmemberlist[i] = goBytedup2char(member)
+		cmemberlen[i] = C.size_t(len(member))
+	}
+
+	C.nemo_SMRem(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
-		goByte2char(member), C.size_t(len(member)),
+		C.int(l),
+		(**C.char)(unsafe.Pointer(&cmemberlist[0])),
+		(*C.size_t)(unsafe.Pointer(&cmemberlen[0])),
 		&cRes,
 		&cErr,
 	)
@@ -42,9 +66,16 @@ func (nemo *NEMO) SRem(key []byte, member []byte) (int64, error) {
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) SCard(key []byte) int64 {
-	size := C.nemo_SCard(nemo.c, goByte2char(key), C.size_t(len(key)))
-	return int64(size)
+func (nemo *NEMO) SCard(key []byte) (int64, error) {
+	var cSize C.int64_t
+	var cErr *C.char
+	C.nemo_SCard(nemo.c, goByte2char(key), C.size_t(len(key)), &cSize, &cErr)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, res
+	}
+	return int64(cSize), nil
 }
 
 func (nemo *NEMO) SMembers(key []byte) ([][]byte, error) {
@@ -288,13 +319,20 @@ func (nemo *NEMO) nemo_SDiff(keys [][]byte) ([][]byte, error) {
 	}
 }
 
-func (nemo *NEMO) SIsMember(key []byte, member []byte) bool {
-
-	res := C.nemo_SIsMember(nemo.c,
+func (nemo *NEMO) SIsMember(key []byte, member []byte) (bool, error) {
+	var cIfExist C.bool
+	var cErr *C.char
+	C.nemo_SIsMember(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		goByte2char(member), C.size_t(len(member)),
+		&cIfExist, &cErr,
 	)
-	return bool(res)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return false, res
+	}
+	return bool(cIfExist), nil
 }
 
 func (nemo *NEMO) SPop(key []byte) ([]byte, error) {
