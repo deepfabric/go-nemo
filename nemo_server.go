@@ -44,12 +44,12 @@ func (nemo *NEMO) BGSaveGetSnapshot() (*snapshots, error) {
 
 }
 
-func (nemo *NEMO) BGSave(ss *snapshots, db_path string) error {
+func (nemo *NEMO) BGSave(ss *snapshots, dbPath string) error {
 	var cErr *C.char
 	C.nemo_BGSave(nemo.c,
 		C.int(ss.len),
 		ss.c,
-		C.CString(db_path),
+		C.CString(dbPath),
 		&cErr,
 	)
 	if cErr != nil {
@@ -124,7 +124,7 @@ func (nemo *NEMO) GetKeyNum() ([]uint64, error) {
 
 	cNumSlice := cUll2Slice(cNum, int(n))
 	res := make([]uint64, int(n))
-	for i, _ := range res {
+	for i := range res {
 		res[i] = uint64(cNumSlice[i])
 	}
 	return res, nil

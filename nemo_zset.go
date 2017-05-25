@@ -97,15 +97,15 @@ func (nemo *NEMO) ZRange(key []byte, start int64, stop int64) ([]float64, [][]by
 
 	if n == 0 {
 		return nil, nil, nil
-	} else {
-		cScoreListSlice := cDoubles2Slice(cScoreList, int(n))
-		ScoreList := make([]float64, int(n))
-		for i, _ := range ScoreList {
-			ScoreList[i] = float64(cScoreListSlice[i])
-		}
-		C.free(unsafe.Pointer(cScoreList))
-		return ScoreList, cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
 	}
+	cScoreListSlice := cDoubles2Slice(cScoreList, int(n))
+	ScoreList := make([]float64, int(n))
+	for i := range ScoreList {
+		ScoreList[i] = float64(cScoreListSlice[i])
+	}
+	C.free(unsafe.Pointer(cScoreList))
+	return ScoreList, cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
+
 }
 
 func (nemo *NEMO) ZUnionStore(dest []byte, keys [][]byte, weights []float64, aggtype Aggregate) (int64, error) {
@@ -192,7 +192,7 @@ func (nemo *NEMO) ZInterStore(dest []byte, keys [][]byte, weights []float64, agg
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, is_lo bool, is_ro bool) ([]float64, [][]byte, error) {
+func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, IsLo bool, IsRo bool) ([]float64, [][]byte, error) {
 	var n C.int
 	var cScoreList *C.double
 	var memberlist **C.char
@@ -204,7 +204,7 @@ func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, is_lo bool, 
 		C.double(mn), C.double(mx),
 		&n,
 		&cScoreList, &memberlist, &memberlistlen,
-		C.bool(is_lo), C.bool(is_ro),
+		C.bool(IsLo), C.bool(IsRo),
 		&cErr,
 	)
 	if cErr != nil {
@@ -215,15 +215,15 @@ func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, is_lo bool, 
 
 	if n == 0 {
 		return nil, nil, nil
-	} else {
-		cScoreListSlice := cDoubles2Slice(cScoreList, int(n))
-		ScoreList := make([]float64, int(n))
-		for i, _ := range ScoreList {
-			ScoreList[i] = float64(cScoreListSlice[i])
-		}
-		C.free(unsafe.Pointer(cScoreList))
-		return ScoreList, cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
 	}
+	cScoreListSlice := cDoubles2Slice(cScoreList, int(n))
+	ScoreList := make([]float64, int(n))
+	for i := range ScoreList {
+		ScoreList[i] = float64(cScoreListSlice[i])
+	}
+	C.free(unsafe.Pointer(cScoreList))
+	return ScoreList, cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
+
 }
 
 func (nemo *NEMO) ZRem(key []byte, members ...[]byte) (int64, error) {

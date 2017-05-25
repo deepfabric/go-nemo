@@ -8,23 +8,28 @@ import (
 	"unsafe"
 )
 
+// KIterator is kv db iterator
 type KIterator struct {
 	c *C.nemo_KIterator_t
 }
+
+// VolumeIterator is a iterator for five type data volume
 type VolumeIterator struct {
 	c *C.nemo_VolumeIterator_t
 }
 
-func (nemo *NEMO) KScanWithHandle(db *DBNemo, start []byte, end []byte, use_snapshot bool) *KIterator {
+// KScanWithHandle return a kv iterator
+func (nemo *NEMO) KScanWithHandle(db *DBNemo, start []byte, end []byte, UseSnapshot bool) *KIterator {
 	var kit KIterator
 	kit.c = C.nemo_KScanWithHandle(nemo.c, db.c,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
-		C.bool(use_snapshot),
+		C.bool(UseSnapshot),
 	)
 	return &kit
 }
 
+// SeekWithHandle returns next key value pair which is not less than start key
 func (nemo *NEMO) SeekWithHandle(db *DBNemo, start []byte) ([]byte, []byte, error) {
 	var cKey *C.char
 	var cKeyLen C.size_t
@@ -62,14 +67,17 @@ func (nemo *NEMO) SeekWithHandle(db *DBNemo, start []byte) ([]byte, []byte, erro
 
 }
 
+// Next move the iterator to the next element
 func (it *KIterator) Next() {
 	C.KNext(it.c)
 }
 
+// Valid return true if the iterator is valid
 func (it *KIterator) Valid() bool {
 	return bool(C.KValid(it.c))
 }
 
+// Key return the key entry of the iterator
 func (it *KIterator) Key() []byte {
 	var cRes *C.char
 	var cLen C.size_t
@@ -80,6 +88,7 @@ func (it *KIterator) Key() []byte {
 	return res
 }
 
+// Value return the value entry of the iterator
 func (it *KIterator) Value() []byte {
 	var cRes *C.char
 	var cLen C.size_t
@@ -90,10 +99,12 @@ func (it *KIterator) Value() []byte {
 	return res
 }
 
+// Free release the iterator
 func (it *KIterator) Free() {
 	C.KIteratorFree(it.c)
 }
 
+// NewVolumeIterator return the volume iterator
 func (nemo *NEMO) NewVolumeIterator(start []byte, end []byte) *VolumeIterator {
 	var it VolumeIterator
 	it.c = C.createVolumeIterator(nemo.c,
@@ -104,14 +115,17 @@ func (nemo *NEMO) NewVolumeIterator(start []byte, end []byte) *VolumeIterator {
 	return &it
 }
 
+// Next move the iterator to the next element
 func (it *VolumeIterator) Next() {
 	C.VolNext(it.c)
 }
 
+// Valid return true if the iterator is valid
 func (it *VolumeIterator) Valid() bool {
 	return bool(C.VolValid(it.c))
 }
 
+// Key return the key entry of the iterator
 func (it *VolumeIterator) Key() []byte {
 	var cRes *C.char
 	var cLen C.size_t
@@ -122,12 +136,14 @@ func (it *VolumeIterator) Key() []byte {
 	return res
 }
 
+// Value return the value entry of the iterator
 func (it *VolumeIterator) Value() int64 {
 	var cRes C.int64_t
 	C.Volvalue(it.c, &cRes)
 	return int64(cRes)
 }
 
+// Free release the iterator
 func (it *VolumeIterator) Free() {
 	C.VolIteratorFree(it.c)
 }

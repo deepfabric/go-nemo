@@ -8,7 +8,9 @@ import (
 	"unsafe"
 )
 
-func (nemo *NEMO) HSet(key []byte, field []byte, value []byte) (error, int) {
+// HSet set a field with value on hash table named as key
+// return 1 if the field does not exist,otherwise return 0
+func (nemo *NEMO) HSet(key []byte, field []byte, value []byte) (int, error) {
 	var cErr *C.char
 	var iExist C.int
 	C.nemo_HSet(nemo.c,
@@ -21,11 +23,12 @@ func (nemo *NEMO) HSet(key []byte, field []byte, value []byte) (error, int) {
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return res, 0
+		return 0, res
 	}
-	return nil, int(iExist)
+	return int(iExist), nil
 }
 
+// HGet get a value of a field in hash table named as key
 func (nemo *NEMO) HGet(key []byte, field []byte) ([]byte, error) {
 	var cErr *C.char
 	var cVal *C.char
@@ -46,6 +49,8 @@ func (nemo *NEMO) HGet(key []byte, field []byte) ([]byte, error) {
 	return val, nil
 }
 
+// HDel delete muli fileds in hash table named as key
+// return the count of deleted keys which don't contain unexisted keys
 func (nemo *NEMO) HDel(key []byte, fields ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -76,6 +81,7 @@ func (nemo *NEMO) HDel(key []byte, fields ...[]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// HExists returns true if the field has been set in the hash table named as key
 func (nemo *NEMO) HExists(key []byte, field []byte) (bool, error) {
 	var cIfExist C.bool
 	var cErr *C.char
@@ -92,6 +98,7 @@ func (nemo *NEMO) HExists(key []byte, field []byte) (bool, error) {
 	return bool(cIfExist), nil
 }
 
+// HKeys return all fields in the hash table named as key
 func (nemo *NEMO) HKeys(key []byte) ([][]byte, error) {
 	var n C.int
 	var fieldlist **C.char
@@ -106,11 +113,12 @@ func (nemo *NEMO) HKeys(key []byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), fieldlist, fieldlistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), fieldlist, fieldlistlen), nil
+
 }
 
+// HVals returns all values int the hash table named as key
 func (nemo *NEMO) HVals(key []byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
@@ -125,11 +133,12 @@ func (nemo *NEMO) HVals(key []byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
+
 }
 
+// HGetall returns all field,value pairs in the hash table named as key
 func (nemo *NEMO) HGetall(key []byte) ([][]byte, [][]byte, error) {
 	var n C.int
 	var fieldlist **C.char
@@ -146,11 +155,11 @@ func (nemo *NEMO) HGetall(key []byte) ([][]byte, [][]byte, error) {
 
 	if n == 0 {
 		return nil, nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), fieldlist, fieldlistlen), cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), fieldlist, fieldlistlen), cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 }
 
+// HLen returns the element count of a hash table
 func (nemo *NEMO) HLen(key []byte) (int64, error) {
 	var cLen C.int64_t
 	var cErr *C.char
@@ -163,6 +172,7 @@ func (nemo *NEMO) HLen(key []byte) (int64, error) {
 	return int64(cLen), nil
 }
 
+// HMGet gets multi values of multi fields in a hash table
 func (nemo *NEMO) HMGet(key []byte, fields [][]byte) ([][]byte, []error) {
 	l := len(fields)
 	cfieldlist := make([]*C.char, l)
@@ -199,11 +209,13 @@ func (nemo *NEMO) HMGet(key []byte, fields [][]byte) ([][]byte, []error) {
 	return cSlice2MultiByte(l, cvallist, cvallen), errs
 }
 
-func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) (error, []int) {
+// HMSet sets multi fields with multi values in a hash table
+// return every result of every single set like HSet
+func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) ([]int, error) {
 	var cErr *C.char
 	l := len(fields)
 	if len(vals) != l {
-		return errors.New("key len != val len"), nil
+		return nil, errors.New("key len != val len")
 	}
 	cfieldlist := make([]*C.char, l)
 	cfieldlen := make([]C.size_t, l)
@@ -240,16 +252,18 @@ func (nemo *NEMO) HMSet(key []byte, fields [][]byte, vals [][]byte) (error, []in
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return res, nil
+		return nil, res
 	}
 
-	for i, _ := range goreslist {
+	for i := range goreslist {
 		goreslist[i] = int(creslist[i])
 	}
 
-	return nil, goreslist
+	return goreslist, nil
 }
 
+// HSetnx set an existed field with value in a hash table
+// return 1 if the field does not exist, otherwise 0
 func (nemo *NEMO) HSetnx(key []byte, field []byte, value []byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -267,6 +281,7 @@ func (nemo *NEMO) HSetnx(key []byte, field []byte, value []byte) (int64, error) 
 	return int64(cRes), nil
 }
 
+// HStrlen returns the value length of a filed in a hash table
 func (nemo *NEMO) HStrlen(key []byte, field []byte) (int64, error) {
 	var cLen C.int64_t
 	var cErr *C.char
@@ -282,6 +297,7 @@ func (nemo *NEMO) HStrlen(key []byte, field []byte) (int64, error) {
 	return int64(cLen), nil
 }
 
+// HIncrby increment a filed by a integer
 func (nemo *NEMO) HIncrby(key []byte, field []byte, by int64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t

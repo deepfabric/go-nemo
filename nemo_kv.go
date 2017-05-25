@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-// Get a key return a value
+// Get0 returns a value of a key without memory copy
 func (nemo *NEMO) Get0(key []byte) (*Slice, error) {
 	var v C.nemoStr
 	var cErr *C.char
@@ -22,6 +22,7 @@ func (nemo *NEMO) Get0(key []byte) (*Slice, error) {
 	return NewSlice(&v), nil
 }
 
+// Get returns value of a key
 func (nemo *NEMO) Get(key []byte) ([]byte, error) {
 	var cVal *C.char
 	var cLen C.size_t
@@ -52,6 +53,7 @@ func (nemo *NEMO) Set(key []byte, value []byte, ttl int) error {
 	return nil
 }
 
+// MGet gets multi values of muli keys
 func (nemo *NEMO) MGet(keys [][]byte) ([][]byte, []error) {
 	l := len(keys)
 	ckeylist := make([]*C.char, l)
@@ -86,6 +88,7 @@ func (nemo *NEMO) MGet(keys [][]byte) ([][]byte, []error) {
 	return cSlice2MultiByte(l, cvallist, cvallen), errs
 }
 
+// MSet sets muli keys with multi values
 func (nemo *NEMO) MSet(keys [][]byte, vals [][]byte) error {
 	var cErr *C.char
 	l := len(keys)
@@ -129,6 +132,7 @@ func (nemo *NEMO) MSet(keys [][]byte, vals [][]byte) error {
 	return nil
 }
 
+// Keys returns all keys with specified pattern
 func (nemo *NEMO) Keys(pattern []byte) ([][]byte, error) {
 	var cPattern *C.char = goByte2char(pattern)
 	var cPatternlen C.size_t = C.size_t(len(pattern))
@@ -145,11 +149,12 @@ func (nemo *NEMO) Keys(pattern []byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), keylist, keylistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), keylist, keylistlen), nil
+
 }
 
+// Incrby increments a key by a integer
 func (nemo *NEMO) Incrby(key []byte, by int64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -166,6 +171,7 @@ func (nemo *NEMO) Incrby(key []byte, by int64) ([]byte, error) {
 	return Res, nil
 }
 
+// Decrby descrements a key by a integer
 func (nemo *NEMO) Decrby(key []byte, by int64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -182,6 +188,7 @@ func (nemo *NEMO) Decrby(key []byte, by int64) ([]byte, error) {
 	return Res, nil
 }
 
+// IncrbyFloat increments a key by a float
 func (nemo *NEMO) IncrbyFloat(key []byte, by float64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -198,6 +205,7 @@ func (nemo *NEMO) IncrbyFloat(key []byte, by float64) ([]byte, error) {
 	return Res, nil
 }
 
+// GetSet get old value of a key and set new value
 func (nemo *NEMO) GetSet(key []byte, value []byte, ttl int) ([]byte, error) {
 	var (
 		cErr       *C.char
@@ -219,6 +227,7 @@ func (nemo *NEMO) GetSet(key []byte, value []byte, ttl int) ([]byte, error) {
 	return OldVal, nil
 }
 
+// Append appends a key with value,returns new length
 func (nemo *NEMO) Append(key []byte, value []byte) (int64, error) {
 	var (
 		cErr    *C.char
@@ -237,6 +246,8 @@ func (nemo *NEMO) Append(key []byte, value []byte) (int64, error) {
 	return int64(cNewLen), nil
 }
 
+// Setnx sets a key with value if the key does not exist
+// return 1 if the key does not exist
 func (nemo *NEMO) Setnx(key []byte, value []byte, ttl int32) (int64, error) {
 	var (
 		cErr *C.char
@@ -255,6 +266,8 @@ func (nemo *NEMO) Setnx(key []byte, value []byte, ttl int32) (int64, error) {
 	return int64(cRet), nil
 }
 
+// Setxx sets a key with value if the key does exist
+// return 1 if the key does exist
 func (nemo *NEMO) Setxx(key []byte, value []byte, ttl int32) (int64, error) {
 	var (
 		cErr *C.char
@@ -276,6 +289,7 @@ func (nemo *NEMO) Setxx(key []byte, value []byte, ttl int32) (int64, error) {
 //	nemo_Getrange
 //	nemo_Setrange
 
+// StrLen returns the length of a key
 func (nemo *NEMO) StrLen(key []byte) (int64, error) {
 	var cLen C.int64_t
 	var cErr *C.char

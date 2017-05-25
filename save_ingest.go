@@ -8,14 +8,14 @@ import (
 	"unsafe"
 )
 
-func (nemo *NEMO) RawScanSaveRange(path string, start []byte, end []byte, use_snapshot bool) error {
+func (nemo *NEMO) RawScanSaveRange(path string, start []byte, end []byte, UseSnapshot bool) error {
 	var cErr *C.char
 	cPath := C.CString(path)
 	C.nemo_RawScanSaveAll(nemo.c,
 		cPath,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
-		C.bool(use_snapshot),
+		C.bool(UseSnapshot),
 		&cErr,
 	)
 	if cErr != nil {

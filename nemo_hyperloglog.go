@@ -8,6 +8,7 @@ import (
 	"unsafe"
 )
 
+// PfAdd add new value about a set named as key
 func (nemo *NEMO) PfAdd(key []byte, vals [][]byte) (bool, error) {
 	var cErr *C.char
 	var cUpdate C.bool
@@ -42,6 +43,7 @@ func (nemo *NEMO) PfAdd(key []byte, vals [][]byte) (bool, error) {
 	return bool(cUpdate), nil
 }
 
+// PfCount return counts of a set named as key
 func (nemo *NEMO) PfCount(keys [][]byte) (int, error) {
 	var cErr *C.char
 	var cRes C.int
@@ -75,6 +77,7 @@ func (nemo *NEMO) PfCount(keys [][]byte) (int, error) {
 	return int(cRes), nil
 }
 
+// PfMerge merge multi sets
 func (nemo *NEMO) PfMerge(keys [][]byte) (int64, error) {
 	var cErr *C.char
 	l := len(keys)

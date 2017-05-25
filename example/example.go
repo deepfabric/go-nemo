@@ -33,24 +33,24 @@ func main() {
 	}
 
 	//Get0
-	res_value0, err := n.Get0(key)
-	defer res_value0.Free()
+	ResValue0, err := n.Get0(key)
+	defer ResValue0.Free()
 	if err == nil {
 		fmt.Print("success to Get0 value:")
-		res := res_value0.Data()
+		res := ResValue0.Data()
 		fmt.Println("value:" + string(res))
-		if Equal(res, value) {
+		if equal(res, value) {
 			fmt.Println("Get0 value correct!")
 		}
 	} else {
 		fmt.Println(err)
 	}
 	//Get
-	res_value, err := n.Get(key)
+	ResValue, err := n.Get(key)
 	if err == nil {
 		fmt.Print("success to Get value:")
-		fmt.Println("value:" + string(res_value))
-		if Equal(res_value, value) {
+		fmt.Println("value:" + string(ResValue))
+		if equal(ResValue, value) {
 			fmt.Println("Get value correct!")
 		}
 	} else {
@@ -65,68 +65,68 @@ func main() {
 		fmt.Println("success to Mset")
 	}
 	//MGet
-	res_vals, errs := n.MGet(keys)
+	ResVals, errs := n.MGet(keys)
 	fmt.Println("MGet result:")
 	for i, err := range errs {
 		fmt.Println(err)
 		fmt.Println("key" + string(keys[i]))
-		fmt.Println("value" + string(res_vals[i]))
-		if Equal(vals[i], res_vals[i]) {
+		fmt.Println("value" + string(ResVals[i]))
+		if equal(vals[i], ResVals[i]) {
 			fmt.Printf("get value[%d] correct\n", i)
 		} else {
 			fmt.Printf("get value[%d] wrong\n", i)
 		}
 	}
 	//Keys
-	res_keys, err := n.Keys([]byte("*"))
+	ResKeys, err := n.Keys([]byte("*"))
 	if err == nil {
-		for i, _ := range res_keys {
-			fmt.Println("keys res:" + string(res_keys[i]))
+		for i := range ResKeys {
+			fmt.Println("keys res:" + string(ResKeys[i]))
 		}
 	} else {
 		fmt.Println(err)
 	}
 	//HSet
 	Hkey := []byte("H1")
-	err, HSet_res := n.HSet(Hkey, field, value)
+	HSetRes, err := n.HSet(Hkey, field, value)
 	if err == nil {
 		fmt.Print("success to HSet!")
 		fmt.Println("key:" + string("H1"))
 		fmt.Println("field:" + string(field))
 		fmt.Println("value:" + string(value))
-		fmt.Print("HSet_res:")
-		fmt.Println(HSet_res)
+		fmt.Print("HSetRes:")
+		fmt.Println(HSetRes)
 	} else {
 		fmt.Println(err)
 	}
 	//HGet
-	res_value, err = n.HGet(Hkey, field)
+	ResValue, err = n.HGet(Hkey, field)
 	if err == nil {
 		fmt.Print("success to HGet value:")
 		fmt.Println("key:" + string("H1"))
 		fmt.Println("field:" + string(field))
-		fmt.Println("value:" + string(res_value))
-		if Equal(res_value, value) {
+		fmt.Println("value:" + string(ResValue))
+		if equal(ResValue, value) {
 			fmt.Println("HGet value correct!")
 		}
 	} else {
 		fmt.Println(err)
 	}
 	//HMset
-	err, _ = n.HMSet(Hkey, fields, vals)
+	_, err = n.HMSet(Hkey, fields, vals)
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println("success to HMset")
 	}
 	//HMGet
-	res_vals, errs = n.HMGet(Hkey, fields)
+	ResVals, errs = n.HMGet(Hkey, fields)
 	fmt.Println("HMGet result:")
 	for i, err := range errs {
 		fmt.Println(err)
 		fmt.Println("field" + string(fields[i]))
-		fmt.Println("value" + string(res_vals[i]))
-		if Equal(vals[i], res_vals[i]) {
+		fmt.Println("value" + string(ResVals[i]))
+		if equal(vals[i], ResVals[i]) {
 			fmt.Printf("get value[%d] correct\n", i)
 		} else {
 			fmt.Printf("get value[%d] wrong\n", i)
@@ -148,12 +148,12 @@ func main() {
 		fmt.Println(err)
 	}
 	//List Pop
-	res_value, err = n.LPop([]byte("List1"))
+	ResValue, err = n.LPop([]byte("List1"))
 	if err == nil {
 		fmt.Println("success to LPop!")
-		if !Equal(res_value, []byte("hello")) {
+		if !equal(ResValue, []byte("hello")) {
 			fmt.Println("LPop wrong value")
-			fmt.Println(res_value)
+			fmt.Println(ResValue)
 		}
 	} else {
 		fmt.Println(err)
@@ -316,7 +316,7 @@ func main() {
 	*/
 }
 
-func Equal(slice1 []byte, slice2 []byte) bool {
+func equal(slice1 []byte, slice2 []byte) bool {
 	if len(slice1) != len(slice2) {
 		return false
 	}

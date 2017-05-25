@@ -1,42 +1,49 @@
 package gonemo
 
+// DBType is the type of nemo-rocksdb
 type DBType int
 
 const (
-	kNONE_DB DBType = iota
-	kKV_DB
-	kHASH_DB
-	kLIST_DB
-	kZSET_DB
-	kSET_DB
-	kALL
+	// NoneDB DBType
+	NoneDB DBType = iota
+	// KvDB DBType
+	KvDB
+	// HashDB DBType
+	HashDB
+	// ListDB DBType
+	ListDB
+	// ZSetDB DBType
+	ZSetDB
+	// SetDB DBType
+	SetDB
+	// ALL DBType
+	ALL
 )
 
+// BitOpType is the bitmap operation type
 type BitOpType int
 
 const (
-	kBitOpNot BitOpType = iota
-	kBitOpAnd
-	kBitOpOr
-	kBitOpXor
-	kBitOpDefault
+	// BitOpNot BitOpTye
+	BitOpNot BitOpType = iota
+	// BitOpAnd BitOpTye
+	BitOpAnd
+	// BitOpOr BitOpTye
+	BitOpOr
+	// BitOpXor BitOpTye
+	BitOpXor
+	// BitOpDefault BitOpTye
+	BitOpDefault
 )
 
+// Aggregate is the type of aggregate
 type Aggregate int
 
 const (
+	// SUM Aggregate
 	SUM Aggregate = iota
+	// MIN Aggregate
 	MIN
+	// MAX Aggregate
 	MAX
-)
-
-const (
-	ALL_DB  string = "all"
-	KV_DB   string = "kv"
-	HASH_DB string = "hash"
-	LIST_DB string = "list"
-	ZSET_DB string = "zset"
-	SET_DB  string = "set"
-	META_DB string = "meta"
-	RAFT_DB string = "raft"
 )

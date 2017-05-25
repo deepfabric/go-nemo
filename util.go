@@ -35,8 +35,8 @@ func goBytedup2char(b []byte) *C.char {
 func cstr2GoMultiByte(n int, cdatalist **C.char, clenlist *C.size_t) [][]byte {
 	mb := make([][]byte, n)
 	datalist := cStr2Slice(cdatalist, n)
-	lenlist := size_t2Slice(clenlist, n)
-	for i, _ := range mb {
+	lenlist := sizet2Slice(clenlist, n)
+	for i := range mb {
 		mb[i] = C.GoBytes(unsafe.Pointer(datalist[i]), C.int(lenlist[i]))
 		C.free(unsafe.Pointer(datalist[i]))
 	}
@@ -48,7 +48,7 @@ func cstr2GoMultiByte(n int, cdatalist **C.char, clenlist *C.size_t) [][]byte {
 	//	(* C.size_t)(unsafe.Pointer(（uintptr(unsafe.Pointer(lenlist)) + i * unsafe.Sizeof(*lenlist)）))
 }
 
-func size_t2Slice(data *C.size_t, length int) []C.size_t {
+func sizet2Slice(data *C.size_t, length int) []C.size_t {
 	var res []C.size_t
 	sH := (*reflect.SliceHeader)(unsafe.Pointer(&res))
 	sH.Cap, sH.Len, sH.Data = length, length, uintptr(unsafe.Pointer(data))
@@ -64,7 +64,7 @@ func cStr2Slice(data **C.char, length int) []*C.char {
 
 func cSlice2MultiByte(n int, datalist []*C.char, lenlist []C.size_t) [][]byte {
 	mb := make([][]byte, n)
-	for i, _ := range mb {
+	for i := range mb {
 		mb[i] = C.GoBytes(unsafe.Pointer(datalist[i]), C.int(lenlist[i]))
 		C.free(unsafe.Pointer(datalist[i]))
 	}

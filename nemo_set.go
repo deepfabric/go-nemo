@@ -92,12 +92,12 @@ func (nemo *NEMO) SMembers(key []byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
+
 }
 
-func (nemo *NEMO) nemo_SUnionStore(dest []byte, keys [][]byte) (int64, error) {
+func (nemo *NEMO) SUnionStore(dest []byte, keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
 	l := len(keys)
@@ -131,7 +131,7 @@ func (nemo *NEMO) nemo_SUnionStore(dest []byte, keys [][]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) nemo_SUnion(keys [][]byte) ([][]byte, error) {
+func (nemo *NEMO) SUnion(keys [][]byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
 	var vallistlen *C.size_t
@@ -166,12 +166,12 @@ func (nemo *NEMO) nemo_SUnion(keys [][]byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
+
 }
 
-func (nemo *NEMO) nemo_SInterStore(dest []byte, keys [][]byte) (int64, error) {
+func (nemo *NEMO) SInterStore(dest []byte, keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
 	l := len(keys)
@@ -205,7 +205,7 @@ func (nemo *NEMO) nemo_SInterStore(dest []byte, keys [][]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) nemo_SInter(keys [][]byte) ([][]byte, error) {
+func (nemo *NEMO) SInter(keys [][]byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
 	var vallistlen *C.size_t
@@ -240,12 +240,12 @@ func (nemo *NEMO) nemo_SInter(keys [][]byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
+
 }
 
-func (nemo *NEMO) nemo_SDiffStore(dest []byte, keys [][]byte) (int64, error) {
+func (nemo *NEMO) SDiffStore(dest []byte, keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
 	l := len(keys)
@@ -279,7 +279,7 @@ func (nemo *NEMO) nemo_SDiffStore(dest []byte, keys [][]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
-func (nemo *NEMO) nemo_SDiff(keys [][]byte) ([][]byte, error) {
+func (nemo *NEMO) SDiff(keys [][]byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
 	var vallistlen *C.size_t
@@ -314,9 +314,9 @@ func (nemo *NEMO) nemo_SDiff(keys [][]byte) ([][]byte, error) {
 
 	if n == 0 {
 		return nil, nil
-	} else {
-		return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 	}
+	return cstr2GoMultiByte(int(n), vallist, vallistlen), nil
+
 }
 
 func (nemo *NEMO) SIsMember(key []byte, member []byte) (bool, error) {
