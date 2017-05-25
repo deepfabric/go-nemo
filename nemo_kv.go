@@ -155,6 +155,8 @@ func (nemo *NEMO) Keys(pattern []byte) ([][]byte, error) {
 }
 
 // Incrby increments a key by a integer
+// if origin key does not exist,new key will be set as "by"
+// if origin key is not a integer, return an error
 func (nemo *NEMO) Incrby(key []byte, by int64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -172,6 +174,8 @@ func (nemo *NEMO) Incrby(key []byte, by int64) ([]byte, error) {
 }
 
 // Decrby descrements a key by a integer
+// if origin key does not exist,new key will be set as "-by"
+// if origin key is not a integer, return an error
 func (nemo *NEMO) Decrby(key []byte, by int64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -189,6 +193,8 @@ func (nemo *NEMO) Decrby(key []byte, by int64) ([]byte, error) {
 }
 
 // IncrbyFloat increments a key by a float
+// if origin key does not exist,new key will be set as "by"
+// if origin key is not a float, return an error
 func (nemo *NEMO) IncrbyFloat(key []byte, by float64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -205,7 +211,8 @@ func (nemo *NEMO) IncrbyFloat(key []byte, by float64) ([]byte, error) {
 	return Res, nil
 }
 
-// GetSet get old value of a key and set new value
+// GetSet get old value of a key and set new value.
+// If key does not exist, return an error.
 func (nemo *NEMO) GetSet(key []byte, value []byte, ttl int) ([]byte, error) {
 	var (
 		cErr       *C.char

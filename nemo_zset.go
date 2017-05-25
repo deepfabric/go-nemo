@@ -8,6 +8,7 @@ import (
 	"unsafe"
 )
 
+// ZAdd add new member with score into zset.
 func (nemo *NEMO) ZAdd(key []byte, score float64, member []byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -26,6 +27,7 @@ func (nemo *NEMO) ZAdd(key []byte, score float64, member []byte) (int64, error) 
 	return int64(cRes), nil
 }
 
+// ZCard return the element count of the zset.
 func (nemo *NEMO) ZCard(key []byte) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
@@ -38,6 +40,7 @@ func (nemo *NEMO) ZCard(key []byte) (int64, error) {
 	return int64(cSize), nil
 }
 
+// ZCount return the count between score range of the zset.
 func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo bool, IsRo bool) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
@@ -55,6 +58,7 @@ func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo bool, IsRo
 	return int64(cSize), nil
 }
 
+// ZIncrby increment the score int the zset by a float value
 func (nemo *NEMO) ZIncrby(key []byte, member []byte, by float64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -75,6 +79,7 @@ func (nemo *NEMO) ZIncrby(key []byte, member []byte, by float64) ([]byte, error)
 	return Res, nil
 }
 
+// ZRange return zset memeber between start and stop
 func (nemo *NEMO) ZRange(key []byte, start int64, stop int64) ([]float64, [][]byte, error) {
 	var n C.size_t
 	var cScoreList *C.double

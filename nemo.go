@@ -45,6 +45,7 @@ func (nemo *NEMO) Close() {
 	C.nemo_free(nemo.c)
 }
 
+// Compact do all compact
 func (nemo *NEMO) Compact(dbType DBType, sync bool) error {
 	var cErr *C.char
 	C.nemo_Compact(nemo.c, C.int(dbType), C.bool(sync), &cErr)
@@ -56,6 +57,7 @@ func (nemo *NEMO) Compact(dbType DBType, sync bool) error {
 	return nil
 }
 
+// RunBGTask call background task
 func (nemo *NEMO) RunBGTask() error {
 	var cErr *C.char
 	C.nemo_RunBGTask(nemo.c, &cErr)
@@ -67,6 +69,7 @@ func (nemo *NEMO) RunBGTask() error {
 	return nil
 }
 
+// GetCurrentTaskType return current task type
 func (nemo *NEMO) GetCurrentTaskType() *string {
 	cTaskType := C.nemo_GetCurrentTaskType(nemo.c)
 	res := C.GoString(cTaskType)

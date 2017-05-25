@@ -8,6 +8,7 @@ import (
 	"unsafe"
 )
 
+// RawScanSaveRange save range to sst file
 func (nemo *NEMO) RawScanSaveRange(path string, start []byte, end []byte, UseSnapshot bool) error {
 	var cErr *C.char
 	cPath := C.CString(path)
@@ -26,6 +27,7 @@ func (nemo *NEMO) RawScanSaveRange(path string, start []byte, end []byte, UseSna
 	return nil
 }
 
+// IngestFile ingest sst files from path
 func (nemo *NEMO) IngestFile(path string) error {
 	var cErr *C.char
 	cPath := C.CString(path)

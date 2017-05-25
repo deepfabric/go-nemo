@@ -113,15 +113,16 @@ func (nemo *NEMO) LRange(key []byte, begin int64, end int64) ([]int64, [][]byte,
 
 	if n == 0 {
 		return nil, nil, nil
-	} else {
-		cIndex := cInt64s2Slice(IndexList, int(n))
-		index := make([]int64, int(n))
-		for i, _ := range index {
-			index[i] = int64(cIndex[i])
-		}
-		C.free(unsafe.Pointer(IndexList))
-		return index, cstr2GoMultiByte(int(n), vallist, vallistlen), nil
 	}
+
+	cIndex := cInt64s2Slice(IndexList, int(n))
+	index := make([]int64, int(n))
+	for i := range index {
+		index[i] = int64(cIndex[i])
+	}
+	C.free(unsafe.Pointer(IndexList))
+	return index, cstr2GoMultiByte(int(n), vallist, vallistlen), nil
+
 }
 
 // LSet set val of given index

@@ -3,10 +3,6 @@ package gonemo
 // #include "nemo_c.h"
 // #include <stdlib.h>
 import "C"
-import (
-	"errors"
-	"unsafe"
-)
 
 type snapshot struct {
 	c        *C.nemo_Snaptshot_t
@@ -20,6 +16,7 @@ type snapshots struct {
 	instance *NEMO
 }
 
+/*
 func (nemo *NEMO) BGSaveGetSnapshot() (*snapshots, error) {
 	var count C.int
 	var cErr *C.char
@@ -161,6 +158,7 @@ func (nemo *NEMO) GetUsage(keytype string) (uint64, error) {
 	}
 	return uint64(cRes), nil
 }
+*/
 
 //nemo_GetDBByType
 

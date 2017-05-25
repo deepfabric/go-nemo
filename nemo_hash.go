@@ -298,6 +298,8 @@ func (nemo *NEMO) HStrlen(key []byte, field []byte) (int64, error) {
 }
 
 // HIncrby increment a filed by a integer
+// if origin key or member does not exist,new key will be set as "by"
+// if origin member is not a integer, return an error
 func (nemo *NEMO) HIncrby(key []byte, field []byte, by int64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
