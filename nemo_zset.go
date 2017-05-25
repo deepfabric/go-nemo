@@ -38,7 +38,7 @@ func (nemo *NEMO) ZCard(key []byte) (int64, error) {
 	return int64(cSize), nil
 }
 
-func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo, bool, IsRo bool) (int64, error) {
+func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo bool, IsRo bool) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
 	C.nemo_ZCount(nemo.c, goByte2char(key), C.size_t(len(key)),
