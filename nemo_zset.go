@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-// ZAdd add new member with score into zset.
+// ZAdd Add new member with score into zset.
 func (nemo *NEMO) ZAdd(key []byte, score float64, member []byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -27,7 +27,7 @@ func (nemo *NEMO) ZAdd(key []byte, score float64, member []byte) (int64, error) 
 	return int64(cRes), nil
 }
 
-// ZCard return the element count of the zset.
+// ZCard Return the element count of the zset.
 func (nemo *NEMO) ZCard(key []byte) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
@@ -40,7 +40,7 @@ func (nemo *NEMO) ZCard(key []byte) (int64, error) {
 	return int64(cSize), nil
 }
 
-// ZCount return the count between score range of the zset.
+// ZCount Return the count between score range of the zset.
 func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo bool, IsRo bool) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
@@ -58,7 +58,7 @@ func (nemo *NEMO) ZCount(key []byte, begin float64, end float64, IsLo bool, IsRo
 	return int64(cSize), nil
 }
 
-// ZIncrby increment the score int the zset by a float value
+// ZIncrby Increment the score int the zset by a float value
 func (nemo *NEMO) ZIncrby(key []byte, member []byte, by float64) ([]byte, error) {
 	var cRes *C.char
 	var cLen C.size_t
@@ -79,7 +79,7 @@ func (nemo *NEMO) ZIncrby(key []byte, member []byte, by float64) ([]byte, error)
 	return Res, nil
 }
 
-// ZRange return zset memeber between start and stop
+// ZRange Return zset memeber between start and stop
 func (nemo *NEMO) ZRange(key []byte, start int64, stop int64) ([]float64, [][]byte, error) {
 	var n C.size_t
 	var cScoreList *C.double
@@ -113,6 +113,7 @@ func (nemo *NEMO) ZRange(key []byte, start int64, stop int64) ([]float64, [][]by
 
 }
 
+// ZUnionStore Add multiple sorted sets and store the resulting sorted set in a new key
 func (nemo *NEMO) ZUnionStore(dest []byte, keys [][]byte, weights []float64, aggtype Aggregate) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -155,6 +156,7 @@ func (nemo *NEMO) ZUnionStore(dest []byte, keys [][]byte, weights []float64, agg
 	return int64(cRes), nil
 }
 
+// ZInterStore Intersect multiple sorted sets and store the resulting sorted set in a new key
 func (nemo *NEMO) ZInterStore(dest []byte, keys [][]byte, weights []float64, aggtype Aggregate) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -197,6 +199,7 @@ func (nemo *NEMO) ZInterStore(dest []byte, keys [][]byte, weights []float64, agg
 	return int64(cRes), nil
 }
 
+// ZRangebyScore Return a range of members in a sorted set, by score
 func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, IsLo bool, IsRo bool) ([]float64, [][]byte, error) {
 	var n C.int
 	var cScoreList *C.double
@@ -231,6 +234,7 @@ func (nemo *NEMO) ZRangebyScore(key []byte, mn float64, mx float64, IsLo bool, I
 
 }
 
+// ZRem Remove one or more members from a sorted set
 func (nemo *NEMO) ZRem(key []byte, members ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -260,6 +264,7 @@ func (nemo *NEMO) ZRem(key []byte, members ...[]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// ZRank Determine the index of a member in a sorted set
 func (nemo *NEMO) ZRank(key []byte, member []byte) (int64, error) {
 	var cErr *C.char
 	var cRank C.int64_t
@@ -277,6 +282,7 @@ func (nemo *NEMO) ZRank(key []byte, member []byte) (int64, error) {
 	return int64(cRank), nil
 }
 
+// ZRevRank Determine the index of a member in a sorted set, with scores ordered from high to low
 func (nemo *NEMO) ZRevRank(key []byte, member []byte) (int64, error) {
 	var cErr *C.char
 	var cRank C.int64_t
@@ -294,21 +300,30 @@ func (nemo *NEMO) ZRevRank(key []byte, member []byte) (int64, error) {
 	return int64(cRank), nil
 }
 
-func (nemo *NEMO) ZScore(key []byte, member []byte) (float64, error) {
+// ZScore Return the score of a member
+func (nemo *NEMO) ZScore(key []byte, member []byte) (exist bool, score float64, err error) {
 	var cErr *C.char
 	var cScore C.double
+	var cRes C.int64_t
+
 	C.nemo_ZScore(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		goByte2char(member), C.size_t(len(member)),
 		&cScore,
+		&cRes,
 		&cErr,
 	)
 	if cErr != nil {
-		err := errors.New(C.GoString(cErr))
+		err = errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return 0, err
+		return false, 0, err
 	}
-	return float64(cScore), nil
+
+	if cRes == 0 {
+		return false, 0, nil
+	}
+
+	return true, float64(cScore), nil
 }
 
 //nemo_ZRangebylex

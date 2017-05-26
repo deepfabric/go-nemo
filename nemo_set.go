@@ -8,6 +8,7 @@ import (
 	"unsafe"
 )
 
+// SAdd Add muli member into a set
 func (nemo *NEMO) SAdd(key []byte, members ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -37,6 +38,7 @@ func (nemo *NEMO) SAdd(key []byte, members ...[]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// SRem Remove multi member from a set
 func (nemo *NEMO) SRem(key []byte, members ...[]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -66,6 +68,7 @@ func (nemo *NEMO) SRem(key []byte, members ...[]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// SCard Return the sum of the member in a set
 func (nemo *NEMO) SCard(key []byte) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
@@ -78,6 +81,7 @@ func (nemo *NEMO) SCard(key []byte) (int64, error) {
 	return int64(cSize), nil
 }
 
+// SMembers Return all the members in a set
 func (nemo *NEMO) SMembers(key []byte) ([][]byte, error) {
 	var n C.int
 	var memberlist **C.char
@@ -97,6 +101,7 @@ func (nemo *NEMO) SMembers(key []byte) ([][]byte, error) {
 
 }
 
+// SUnionStore Do the union operation on multi set and store the result into a dest set
 func (nemo *NEMO) SUnionStore(dest []byte, keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -131,6 +136,7 @@ func (nemo *NEMO) SUnionStore(dest []byte, keys [][]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// SUnion Do the union operation on multi set and return the result
 func (nemo *NEMO) SUnion(keys [][]byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
@@ -171,6 +177,7 @@ func (nemo *NEMO) SUnion(keys [][]byte) ([][]byte, error) {
 
 }
 
+// SInterStore Do the intersect operation on multi set and store the result into a dest set
 func (nemo *NEMO) SInterStore(dest []byte, keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -205,6 +212,7 @@ func (nemo *NEMO) SInterStore(dest []byte, keys [][]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// SInter Do the intersect operation on multi set and return the result
 func (nemo *NEMO) SInter(keys [][]byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
@@ -245,6 +253,7 @@ func (nemo *NEMO) SInter(keys [][]byte) ([][]byte, error) {
 
 }
 
+// SDiffStore Do the diff operation on multi set and store the result into a dest set
 func (nemo *NEMO) SDiffStore(dest []byte, keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
@@ -279,6 +288,7 @@ func (nemo *NEMO) SDiffStore(dest []byte, keys [][]byte) (int64, error) {
 	return int64(cRes), nil
 }
 
+// SDiff Do the diff operation on multi set and return the result
 func (nemo *NEMO) SDiff(keys [][]byte) ([][]byte, error) {
 	var n C.int
 	var vallist **C.char
@@ -319,6 +329,7 @@ func (nemo *NEMO) SDiff(keys [][]byte) ([][]byte, error) {
 
 }
 
+// SIsMember Return true if the member does in the set
 func (nemo *NEMO) SIsMember(key []byte, member []byte) (bool, error) {
 	var cIfExist C.bool
 	var cErr *C.char
@@ -335,20 +346,28 @@ func (nemo *NEMO) SIsMember(key []byte, member []byte) (bool, error) {
 	return bool(cIfExist), nil
 }
 
-func (nemo *NEMO) SPop(key []byte) ([]byte, error) {
+// SPop Remove and return a random member of Set
+// If set is null, return false
+func (nemo *NEMO) SPop(key []byte) (exist bool, value []byte, err error) {
 	var cMember *C.char
 	var cLen C.size_t
 	var cErr *C.char
+	var cRes C.int64_t
 
-	C.nemo_SPop(nemo.c, goByte2char(key), C.size_t(len(key)), &cMember, &cLen, &cErr)
+	C.nemo_SPop(nemo.c, goByte2char(key), C.size_t(len(key)), &cMember, &cLen, &cRes, &cErr)
 	if cErr != nil {
-		res := errors.New(C.GoString(cErr))
+		err = errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return nil, res
+		return false, nil, err
 	}
-	val := C.GoBytes(unsafe.Pointer(cMember), C.int(cLen))
+
+	if cRes == 0 {
+		return false, nil, nil
+	}
+
+	value = C.GoBytes(unsafe.Pointer(cMember), C.int(cLen))
 	C.free(unsafe.Pointer(cMember))
-	return val, nil
+	return true, value, nil
 }
 
 //nemo_SRandomMember

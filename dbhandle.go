@@ -13,21 +13,21 @@ type DBNemo struct {
 	c *C.nemo_DBNemo_t
 }
 
-// GetMetaHandle return db handle of meta data
+// GetMetaHandle Return db handle of meta data
 func (nemo *NEMO) GetMetaHandle() *DBNemo {
 	var hd DBNemo
 	hd.c = C.nemo_GetMetaHandle(nemo.c)
 	return &hd
 }
 
-// GetRaftHandle return db handle of raft log
+// GetRaftHandle Return db handle of raft log
 func (nemo *NEMO) GetRaftHandle() *DBNemo {
 	var hd DBNemo
 	hd.c = C.nemo_GetRaftHandle(nemo.c)
 	return &hd
 }
 
-// BatchWrite is a batch write api for meta data and raft log rocksdb instance
+// BatchWrite A batch write api for meta data and raft log rocksdb instance
 func (nemo *NEMO) BatchWrite(db *DBNemo, wb *WriteBatch) error {
 	var cErr *C.char
 	C.rocksdb_BatchWrite(nemo.c, db.c, wb.c, &cErr)
@@ -39,7 +39,7 @@ func (nemo *NEMO) BatchWrite(db *DBNemo, wb *WriteBatch) error {
 	return nil
 }
 
-// PutWithHandle put a key value pair with a db handle
+// PutWithHandle Put a key value pair with a db handle
 func (nemo *NEMO) PutWithHandle(db *DBNemo, key []byte, value []byte) error {
 	var cErr *C.char
 	C.nemo_PutWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)),
@@ -54,7 +54,7 @@ func (nemo *NEMO) PutWithHandle(db *DBNemo, key []byte, value []byte) error {
 	return nil
 }
 
-// GetWithHandle get a key value pair with a db handle
+// GetWithHandle Get a key value pair with a db handle
 func (nemo *NEMO) GetWithHandle(db *DBNemo, key []byte) ([]byte, error) {
 	var cVal *C.char
 	var cLen C.size_t
@@ -74,7 +74,7 @@ func (nemo *NEMO) GetWithHandle(db *DBNemo, key []byte) ([]byte, error) {
 	return val, nil
 }
 
-// DeleteWithHandle delete a key value pair with a db handle
+// DeleteWithHandle Delete a key value pair with a db handle
 func (nemo *NEMO) DeleteWithHandle(db *DBNemo, key []byte) error {
 	var cErr *C.char
 	C.nemo_DeleteWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)), &cErr)

@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-// BitSet set the bit of bitmap
+// BitSet Set the bit of bitmap
 func (nemo *NEMO) BitSet(key []byte, offset int64, on int64) (int64, error) {
 	var cRes C.int64_t
 	var cErr *C.char
@@ -26,7 +26,7 @@ func (nemo *NEMO) BitSet(key []byte, offset int64, on int64) (int64, error) {
 	return int64(cRes), nil
 }
 
-// BitGet get the bit of bitmap
+// BitGet Get the bit of bitmap
 func (nemo *NEMO) BitGet(key []byte, offset int64, on int64) (int64, error) {
 	var cRes C.int64_t
 	var cErr *C.char
@@ -44,7 +44,7 @@ func (nemo *NEMO) BitGet(key []byte, offset int64, on int64) (int64, error) {
 	return int64(cRes), nil
 }
 
-// BitCount return the count of bit map
+// BitCount Return the count of bit map
 func (nemo *NEMO) BitCount(key []byte) (int64, error) {
 	var cRes C.int64_t
 	var cErr *C.char
@@ -61,7 +61,7 @@ func (nemo *NEMO) BitCount(key []byte) (int64, error) {
 	return int64(cRes), nil
 }
 
-// BitCountRange return the count of bit map over range
+// BitCountRange Return the count of bit map over range
 func (nemo *NEMO) BitCountRange(key []byte, start int64, end int64) (int64, error) {
 	var cRes C.int64_t
 	var cErr *C.char
@@ -79,7 +79,7 @@ func (nemo *NEMO) BitCountRange(key []byte, start int64, end int64) (int64, erro
 	return int64(cRes), nil
 }
 
-// BitPos return the bit position
+// BitPos Return the bit position
 func (nemo *NEMO) BitPos(key []byte, bit int64) (int64, error) {
 	var cRes C.int64_t
 	var cErr *C.char
@@ -100,7 +100,7 @@ func (nemo *NEMO) BitPos(key []byte, bit int64) (int64, error) {
 //nemo_BitPosWithStart
 //nemo_BitPosWithStartEnd
 
-// BitOp do bit opertation on bitmap
+// BitOp Do bit opertation on bitmap
 func (nemo *NEMO) BitOp(opType BitOpType, dest []byte, srckeys [][]byte) (int64, error) {
 	var cErr *C.char
 	var resLen C.int64_t

@@ -8,7 +8,7 @@ import (
 	"unsafe"
 )
 
-// RangeDel delete key between range
+// RangeDel Delete key between range
 func (nemo *NEMO) RangeDel(start []byte, end []byte) error {
 	var cErr *C.char
 	C.nemo_RangeDel(nemo.c,
@@ -24,7 +24,7 @@ func (nemo *NEMO) RangeDel(start []byte, end []byte) error {
 	return nil
 }
 
-// RangeDelWithHandle delete key between range
+// RangeDelWithHandle Delete key between range
 func (nemo *NEMO) RangeDelWithHandle(db *DBNemo, start []byte, end []byte) error {
 	var cErr *C.char
 	C.nemo_RangeDelWithHandle(nemo.c, db.c,

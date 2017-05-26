@@ -8,6 +8,7 @@ import (
 	"unsafe"
 )
 
+// Del Delete all the single key in different data structure
 func (nemo *NEMO) Del(key []byte) (int64, error) {
 	var (
 		cErr  *C.char
@@ -22,6 +23,7 @@ func (nemo *NEMO) Del(key []byte) (int64, error) {
 	return int64(count), nil
 }
 
+// MDel Delete multi keys in different data structure
 func (nemo *NEMO) MDel(keys [][]byte) (int64, error) {
 	var (
 		cErr  *C.char
@@ -55,6 +57,7 @@ func (nemo *NEMO) MDel(keys [][]byte) (int64, error) {
 	return int64(count), nil
 }
 
+// Expire Set expire time to a single key in different data structure
 func (nemo *NEMO) Expire(key []byte, second int32) (int64, error) {
 	var (
 		cErr *C.char
@@ -69,6 +72,7 @@ func (nemo *NEMO) Expire(key []byte, second int32) (int64, error) {
 	return int64(res), nil
 }
 
+// TTL Return ttl time of a single key
 func (nemo *NEMO) TTL(key []byte) (int64, error) {
 	var (
 		cErr  *C.char
@@ -83,6 +87,7 @@ func (nemo *NEMO) TTL(key []byte) (int64, error) {
 	return int64(count), nil
 }
 
+// Persist Remove the expiration from a key
 func (nemo *NEMO) Persist(key []byte) (int64, error) {
 	var (
 		cErr  *C.char
@@ -97,6 +102,7 @@ func (nemo *NEMO) Persist(key []byte) (int64, error) {
 	return int64(count), nil
 }
 
+// Expireat Set the expiration for a key as a UNIX timestamp
 func (nemo *NEMO) Expireat(key []byte, timestamp int32) (int64, error) {
 	var (
 		cErr *C.char
@@ -111,6 +117,7 @@ func (nemo *NEMO) Expireat(key []byte, timestamp int32) (int64, error) {
 	return int64(res), nil
 }
 
+// Type Return the key's type
 func (nemo *NEMO) Type(key []byte) (*string, error) {
 	var (
 		cErr    *C.char
@@ -127,6 +134,7 @@ func (nemo *NEMO) Type(key []byte) (*string, error) {
 	return &res, nil
 }
 
+// Exists Return true if the key does exist
 func (nemo *NEMO) Exists(keys [][]byte) (int64, error) {
 	var cErr *C.char
 	var cRes C.int64_t
