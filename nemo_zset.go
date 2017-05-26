@@ -326,12 +326,106 @@ func (nemo *NEMO) ZScore(key []byte, member []byte) (exist bool, score float64, 
 	return true, float64(cScore), nil
 }
 
-//nemo_ZRangebylex
+// ZRangebylex Return a range of members in a sorted set, by lexicographical range
+func (nemo *NEMO) ZRangebylex(key []byte, start []byte, end []byte) ([][]byte, error) {
+	var n C.int
+	var memberlist **C.char
+	var memberlistlen *C.size_t
+	var cErr *C.char
 
-//nemo_ZLexcount
+	C.nemo_ZRangebylex(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		goByte2char(start), C.size_t(len(start)),
+		goByte2char(end), C.size_t(len(end)),
+		&n,
+		&memberlist, &memberlistlen,
+		&cErr,
+	)
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return nil, err
+	}
 
-//nemo_ZRemrangebylex
+	if n == 0 {
+		return nil, nil
+	}
 
-//nemo_ZRemrangebyrank
+	return cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
+}
 
-//nemo_ZRemrangebyscore
+//ZLexcount Count the number of members in a sorted set between a given lexicographical range
+func (nemo *NEMO) ZLexcount(key []byte, start []byte, end []byte) (int64, error) {
+	var cSize C.int64_t
+	var cErr *C.char
+	C.nemo_ZLexcount(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		goByte2char(start), C.size_t(len(start)),
+		goByte2char(end), C.size_t(len(end)),
+		&cSize,
+		&cErr,
+	)
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, err
+	}
+	return int64(cSize), nil
+}
+
+// ZRemrangebylex Remove all members in a sorted set between the given lexicographical range
+func (nemo *NEMO) ZRemrangebylex(key []byte, start []byte, end []byte, IsLo bool, IsRo bool) (int64, error) {
+	var cCount C.int64_t
+	var cErr *C.char
+	C.nemo_ZRemrangebylex(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		goByte2char(start), C.size_t(len(start)),
+		goByte2char(end), C.size_t(len(end)),
+		C.bool(IsLo), C.bool(IsRo),
+		&cCount,
+		&cErr,
+	)
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, err
+	}
+	return int64(cCount), nil
+}
+
+// ZRemrangebyrank Remove all members in a sorted set within the given indexes
+func (nemo *NEMO) ZRemrangebyrank(key []byte, start int64, stop int64) (int64, error) {
+	var cCount C.int64_t
+	var cErr *C.char
+	C.nemo_ZRemrangebyrank(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		C.int64_t(start), C.int64_t(stop),
+		&cCount,
+		&cErr,
+	)
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, err
+	}
+	return int64(cCount), nil
+}
+
+// ZRemrangebyscore Remove all members in a sorted set within the given scores
+func (nemo *NEMO) ZRemrangebyscore(key []byte, start float64, stop float64, IsLo bool, IsRo bool) (int64, error) {
+	var cCount C.int64_t
+	var cErr *C.char
+	C.nemo_ZRemrangebyscore(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		C.double(start), C.double(stop),
+		&cCount,
+		C.bool(IsLo), C.bool(IsRo),
+		&cErr,
+	)
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, err
+	}
+	return int64(cCount), nil
+}

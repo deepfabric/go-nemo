@@ -9,5 +9,6 @@ package gonemo
 import "C"
 
 import (
+	// import c-nemo library
 	_ "github.com/deepfabric/c-nemo"
 )

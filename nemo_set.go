@@ -370,6 +370,53 @@ func (nemo *NEMO) SPop(key []byte) (exist bool, value []byte, err error) {
 	return true, value, nil
 }
 
-//nemo_SRandomMember
+// SRandomMember Get one or multiple random members from a set
+func (nemo *NEMO) SRandomMember(key []byte, count int) ([][]byte, error) {
+	var n C.int
+	var memberlist **C.char
+	var memberlistlen *C.size_t
+	var cRes C.int64_t
+	var cErr *C.char
+	C.nemo_SRandomMember(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		&n, &memberlist, &memberlistlen,
+		C.int(count),
+		&cRes,
+		&cErr,
+	)
 
-//nemo_SMove
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return nil, err
+	}
+
+	if n == 0 || cRes == 0 {
+		return nil, nil
+	}
+
+	return cstr2GoMultiByte(int(n), memberlist, memberlistlen), nil
+}
+
+// SMove Move a member from one set to another
+func (nemo *NEMO) SMove(srckey []byte, destkey []byte, member []byte) (int64, error) {
+	var cErr *C.char
+	var cRes C.int64_t
+
+	C.nemo_SMove(nemo.c,
+		goByte2char(srckey), C.size_t(len(srckey)),
+		goByte2char(destkey), C.size_t(len(destkey)),
+		goByte2char(member), C.size_t(len(member)),
+		&cRes,
+		&cErr,
+	)
+
+	if cErr != nil {
+		err := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return 0, err
+	}
+
+	return int64(cRes), nil
+
+}
