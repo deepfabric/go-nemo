@@ -327,7 +327,7 @@ func (nemo *NEMO) ZScore(key []byte, member []byte) (exist bool, score float64, 
 }
 
 // ZRangebylex Return a range of members in a sorted set, by lexicographical range
-func (nemo *NEMO) ZRangebylex(key []byte, start []byte, end []byte) ([][]byte, error) {
+func (nemo *NEMO) ZRangebylex(key []byte, start []byte, end []byte, IsLo bool, IsRo bool) ([][]byte, error) {
 	var n C.int
 	var memberlist **C.char
 	var memberlistlen *C.size_t
@@ -339,6 +339,7 @@ func (nemo *NEMO) ZRangebylex(key []byte, start []byte, end []byte) ([][]byte, e
 		goByte2char(end), C.size_t(len(end)),
 		&n,
 		&memberlist, &memberlistlen,
+		C.bool(IsLo), C.bool(IsRo),
 		&cErr,
 	)
 	if cErr != nil {
@@ -355,7 +356,7 @@ func (nemo *NEMO) ZRangebylex(key []byte, start []byte, end []byte) ([][]byte, e
 }
 
 //ZLexcount Count the number of members in a sorted set between a given lexicographical range
-func (nemo *NEMO) ZLexcount(key []byte, start []byte, end []byte) (int64, error) {
+func (nemo *NEMO) ZLexcount(key []byte, start []byte, end []byte, IsLo bool, IsRo bool) (int64, error) {
 	var cSize C.int64_t
 	var cErr *C.char
 	C.nemo_ZLexcount(nemo.c,
@@ -363,6 +364,7 @@ func (nemo *NEMO) ZLexcount(key []byte, start []byte, end []byte) (int64, error)
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
 		&cSize,
+		C.bool(IsLo), C.bool(IsRo),
 		&cErr,
 	)
 	if cErr != nil {
