@@ -12,7 +12,8 @@ import (
 )
 
 func main() {
-	opts := gonemo.NewDefaultOptions()
+	//opts := gonemo.NewDefaultOptions()
+	opts := gonemo.NewOptions()
 	n := gonemo.OpenNemo(opts, "/tmp/go-nemo/")
 	key := []byte("Hello")
 	field := []byte("Hello")

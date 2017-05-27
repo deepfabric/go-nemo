@@ -23,7 +23,35 @@ type NEMO struct {
 // NewDefaultOptions create default option
 func NewDefaultOptions() *Options {
 	opts := C.nemo_CreateOption()
-	return &Options{c: opts}
+
+	return &Options{
+		c: opts,
+	}
+}
+
+// NewOptions Create new options for nemo
+func NewOptions() *Options {
+	cOpts := C.nemo_CreateOption()
+
+	var goOpts = C.GoNemoOpts{
+		create_if_missing: C.bool(true),
+		write_buffer_size: C.int(64 * 1024 * 1024),
+		max_open_files:    C.int(5000),
+		use_bloomfilter:   C.bool(true),
+		write_threads:     C.int(71),
+
+		// default target_file_size_base and multiplier is the save as rocksdb
+		target_file_size_base:          C.int(64 * 1024 * 1024),
+		target_file_size_multiplier:    C.int(1),
+		compression:                    C.bool(true),
+		max_background_flushes:         C.int(1),
+		max_background_compactions:     C.int(1),
+		max_bytes_for_level_multiplier: C.int(10),
+	}
+
+	C.nemo_SetOptions(cOpts, &goOpts)
+
+	return &Options{c: cOpts}
 }
 
 // OpenNemo return a nemo handle
