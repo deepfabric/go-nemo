@@ -19,7 +19,7 @@ func genString(length int) []byte {
 
 func BenchmarkHashSet(b *testing.B) {
 
-	var lenght int = 10
+	var length int = 10
 	var kNum int = 1000
 	opts := NewOptions()
 	n := OpenNemo(opts, "/tmp/go-benchmark/go-nemo/")
@@ -28,8 +28,8 @@ func BenchmarkHashSet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
 		HKey := append([]byte("hash_key:"), []byte(strconv.Itoa(rand.Intn(kNum)))...)
-		field := genString(lenght)
-		value := genString(lenght)
+		field := genString(length)
+		value := genString(length)
 		b.StartTimer()
 		_, err := n.HSet(HKey, field, value)
 		if err != nil {

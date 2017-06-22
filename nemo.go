@@ -40,8 +40,8 @@ func NewOptions() *Options {
 		use_bloomfilter:   C.bool(true),
 		write_threads:     C.int(71),
 
-		// default target_file_size_base and multiplier is the save as rocksdb
-		target_file_size_base:          C.int(64 * 1024 * 1024),
+		// default target_file_size_base and multiplier is the same as rocksdb
+		target_file_size_base:          C.int(20 * 1024 * 1024),
 		target_file_size_multiplier:    C.int(1),
 		compression:                    C.bool(true),
 		max_background_flushes:         C.int(1),
