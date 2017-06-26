@@ -110,5 +110,5 @@ func main() {
 	fmt.Print(float32(sum) / float32(*pCnt))
 	fmt.Println(" per ops")
 	fmt.Print("QPS: ")
-	fmt.Println(float32(*pCnt) / float32(sum) * 1000000000)
+	fmt.Println(float32(*pCnt*threads*threads) / float32(sum) * 1000000000)
 }
