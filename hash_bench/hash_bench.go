@@ -21,6 +21,7 @@ var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 var pLength = flag.Int("length", 10, "length for the hash table member key")
 var pkNum = flag.Int("n", 1000, "max count for the hash table name")
 var pCnt = flag.Int("count", 10000, "query time")
+var pThread = flag.Int("p", 1, "parallel thread")
 
 var alphabet = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
@@ -30,6 +31,25 @@ func genString(length int) []byte {
 		str[i] = alphabet[rand.Intn(len(alphabet))]
 	}
 	return str
+}
+
+func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
+	iSumTime[thread] = 0
+	for i := 0; i < *pCnt; i++ {
+		HKey := append([]byte("hash_key:"), []byte(strconv.Itoa(rand.Intn(*pkNum)))...)
+		field := genString(*pLength)
+		value := genString(*pLength)
+		t1 := time.Now().UnixNano()
+		_, err := n.HSet(HKey, field, value)
+		t2 := time.Now().UnixNano()
+		iSumTime[thread] += t2 - t1
+		if err != nil {
+			fmt.Println("HSet Err!")
+		}
+	}
+	fmt.Print("Thread done:")
+	fmt.Println(thread)
+	done <- 1
 }
 
 func main() {
@@ -45,10 +65,6 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	length := *pLength
-	kNum := *pkNum
-	cnt := *pCnt
-	var SumTime int64
 	opts := gonemo.NewOptions()
 	n := gonemo.OpenNemo(opts, "./tmp/")
 	rand.Seed(time.Now().Unix())
@@ -57,22 +73,20 @@ func main() {
 		log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
 	}()
 
-	for i := 0; i < cnt; i++ {
-		HKey := append([]byte("hash_key:"), []byte(strconv.Itoa(rand.Intn(kNum)))...)
-		field := genString(length)
-		value := genString(length)
-		t1 := time.Now().UnixNano()
-		_, err := n.HSet(HKey, field, value)
-		t2 := time.Now().UnixNano()
-		SumTime += t2 - t1
-		if err != nil {
-			fmt.Println("HSet Err!")
-		}
+	threads := *pThread
+	SumTime := make([]int64, threads)
+
+	done := make(chan int)
+
+	for thread := 0; thread < threads; thread++ {
+		go opThread(SumTime, thread, done, n)
+		fmt.Print("Thread:")
+		fmt.Println(thread)
 	}
 
-	s := make([][]byte, 100)
-	for i := 0; i < 100; i++ {
-		s[i] = genString(1234)
+	for thread := 0; thread < threads; thread++ {
+		<-done
+		fmt.Println("main thread recieve from chan")
 	}
 
 	if *memprofile != "" {
@@ -87,10 +101,14 @@ func main() {
 		f.Close()
 	}
 	n.Close()
+	var sum int64 = 0
+	for i, _ := range SumTime {
+		sum += SumTime[i]
+	}
 	fmt.Print("total time:")
-	fmt.Println(SumTime)
-	fmt.Print(float32(SumTime) / float32(cnt))
+	fmt.Println(sum)
+	fmt.Print(float32(sum) / float32(*pCnt))
 	fmt.Println(" per ops")
 	fmt.Print("QPS: ")
-	fmt.Println(float32(cnt) / float32(SumTime) * 1000000000)
+	fmt.Println(float32(*pCnt) / float32(sum) * 1000000000)
 }
