@@ -25,20 +25,21 @@ var pThread = flag.Int("p", 1, "parallel thread")
 
 var alphabet = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
-func genString(length int) []byte {
+func genString(length int, r *rand.Rand) []byte {
 	str := make([]byte, length)
 	for i := 0; i < len(str); i++ {
-		str[i] = alphabet[rand.Intn(len(alphabet))]
+		str[i] = alphabet[r.Intn(len(alphabet))]
 	}
 	return str
 }
 
 func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 	iSumTime[thread] = 0
+        r := rand.New(rand.NewSource(time.Now().Unix()))
 	for i := 0; i < *pCnt; i++ {
-		HKey := append([]byte("hash_key:"), []byte(strconv.Itoa(rand.Intn(*pkNum)))...)
-		field := genString(*pLength)
-		value := genString(*pLength)
+		HKey := append([]byte("hash_key:"), []byte(strconv.Itoa(r.Intn(*pkNum)))...)
+		field := genString(*pLength,r)
+		value := genString(*pLength,r)
 		t1 := time.Now().UnixNano()
 		_, err := n.HSet(HKey, field, value)
 		t2 := time.Now().UnixNano()
@@ -67,7 +68,6 @@ func main() {
 
 	opts := gonemo.NewOptions()
 	n := gonemo.OpenNemo(opts, "./tmp/")
-	rand.Seed(time.Now().Unix())
 
 	go func() {
 		log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
