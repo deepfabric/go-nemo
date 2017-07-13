@@ -10,7 +10,7 @@ import (
 
 // KIterator is kv db iterator
 type KIterator struct {
-	c *C.nemo_KIterator_t
+	c *C.nemo_KIteratorRO_t
 }
 
 // VolumeIterator is a iterator for five type data volume
@@ -69,12 +69,12 @@ func (nemo *NEMO) SeekWithHandle(db *DBNemo, start []byte) ([]byte, []byte, erro
 
 // Next Move the iterator to the next element
 func (it *KIterator) Next() {
-	C.KNext(it.c)
+	C.KRONext(it.c)
 }
 
 // Valid Return true if the iterator is valid
 func (it *KIterator) Valid() bool {
-	return bool(C.KValid(it.c))
+	return bool(C.KROValid(it.c))
 }
 
 // Key Return the key entry of the iterator
@@ -82,7 +82,7 @@ func (it *KIterator) Key() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
-	C.Kkey(it.c, &cRes, &cLen)
+	C.KROkey(it.c, &cRes, &cLen)
 	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
 	C.free(unsafe.Pointer(cRes))
 	return res
@@ -93,7 +93,7 @@ func (it *KIterator) Value() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
-	C.Kvalue(it.c, &cRes, &cLen)
+	C.KROvalue(it.c, &cRes, &cLen)
 	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
 	C.free(unsafe.Pointer(cRes))
 	return res
@@ -101,7 +101,7 @@ func (it *KIterator) Value() []byte {
 
 // Free Release the iterator
 func (it *KIterator) Free() {
-	C.KIteratorFree(it.c)
+	C.KROIteratorFree(it.c)
 }
 
 // NewVolumeIterator Return the volume iterator

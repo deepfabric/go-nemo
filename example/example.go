@@ -185,6 +185,8 @@ func main() {
 	wb.WriteBatchPut([]byte("BK1"), []byte("V1"))
 	wb.WriteBatchPut([]byte("BK2"), []byte("V2"))
 	wb.WriteBatchDel([]byte("BK2"))
+	wb.WriteBatchPut([]byte("BK3"), []byte("V3"))
+	wb.WriteBatchPut([]byte("BK4"), []byte("V4"))
 	err = n.BatchWrite(h1, wb)
 	if err != nil {
 		fmt.Println(err)
@@ -192,7 +194,7 @@ func main() {
 		fmt.Println("success to BatchWrite")
 	}
 
-	kit := n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
+	kit := n.KScanWithHandle(h1, []byte("BK1"), []byte("BK4"), true)
 	for ; kit.Valid(); kit.Next() {
 		fmt.Println("meta iterator key:" + string(kit.Key()))
 		fmt.Println("meta iterator val:" + string(kit.Value()))
