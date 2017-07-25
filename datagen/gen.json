@@ -1,0 +1,12 @@
+{
+    "hash":{
+            "key_length":10,
+            "field_length":20,
+            "value_length":100,
+            "table_count":1000,
+            "entry_count":100000,
+            "thread":8
+    },
+    
+    "nemo-path":"/tmp/datagen/"
+}
