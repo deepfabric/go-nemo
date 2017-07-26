@@ -1,0 +1,13 @@
+{
+    "create_if_missing": true,
+    "write_buffer_size": 64,          "comment1-default":"MegaByte",
+    "max_open_files": 5000,
+    "use_bloomfilter": true,
+    "write_threads": 71,
+    "target_file_size_base":20,       "comment2-default":"MegaByte",
+    "target_file_size_multiplier":1,
+    "compression":true,
+    "max_background_flushes":1,
+    "max_background_compactions":1,
+    "max_bytes_for_level_multiplier":10
+}

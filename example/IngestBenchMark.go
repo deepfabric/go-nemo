@@ -16,6 +16,8 @@ var bakPath = flag.String("backup-path", "/tmp/datagen-bak/", "sst files dump pa
 var targetPath = flag.String("target-path", "/tmp/ingest/", "target nemo db path will be ingested")
 var keyRange = flag.String("key-range", "0:9", "dumped key range")
 
+var optFile = flag.String("nemo-option", "./option.json", "option file for nemo")
+
 func main() {
 
 	str := time.Now().Format("2006-01-02T15:04:05")
@@ -48,17 +50,33 @@ func main() {
 	logger.Printf("ingest target nemo db path[%s]\n", *targetPath)
 	logger.Printf("dump key range start key[%s],end key[%s]\n", keys[0], keys[1])
 
-	opts := gonemo.NewOptions()
+	opts, jsonConf := gonemo.NewOptions(*optFile)
+	if opts == nil {
+		fmt.Println("nemo options init failed")
+		return
+	}
+
+	logger.Printf("nemo conf:\n")
+	logger.Printf("CreateIfMissing:	%t\n", jsonConf.CreateIfMissing)
+	logger.Printf("WriteBufferSize:	%dMegaByte\n", jsonConf.WriteBufferSize)
+	logger.Printf("MaxOpenFiles:	%d\n", jsonConf.MaxOpenFiles)
+	logger.Printf("UseBloomfilter:	%t\n", jsonConf.UseBloomfilter)
+	logger.Printf("WriteThreads:	%d\n", jsonConf.WriteThreads)
+	logger.Printf("TargetFileSizeBase:	%dMegaByte\n", jsonConf.TargetFileSizeBase)
+	logger.Printf("Compression:	%t\n", jsonConf.Compression)
+	logger.Printf("MaxBackgroundFlushes:	%d\n", jsonConf.MaxBackgroundFlushes)
+	logger.Printf("MaxBackgroundCompactions:	%d\n", jsonConf.MaxBackgroundCompactions)
+	logger.Printf("MaxBytesForLevelMultiplier:	%d\n", jsonConf.MaxBytesForLevelMultiplier)
+
 	n := gonemo.OpenNemo(opts, *srcPath)
 
 	t1 := time.Now().UnixNano()
 	err = n.RawScanSaveRange(*bakPath, startKey, endKey, true)
 	t2 := time.Now().UnixNano()
-	fmt.Printf("dump sst file spent time %d mili seconds\n", (t2-t1)/1000000)
-	logger.Printf("dump sst file spent time %d mili seconds\n", (t2-t1)/1000000)
+	fmt.Printf("dump sst file spent time %d milli-seconds\n", (t2-t1)/1000000)
+	logger.Printf("dump sst file spent time %d milli-seconds\n", (t2-t1)/1000000)
 	n.Close()
 
-	opts = gonemo.NewDefaultOptions()
 	n = gonemo.OpenNemo(opts, *targetPath)
 
 	t1 = time.Now().UnixNano()
@@ -69,6 +87,6 @@ func main() {
 		fmt.Println("success to IngestFile")
 	}
 	t2 = time.Now().UnixNano()
-	fmt.Printf("Ingest sst File spent time %d mili seconds\n", (t2-t1)/1000000)
-	logger.Printf("Ingest sst File spent time %d mili seconds\n", (t2-t1)/1000000)
+	fmt.Printf("Ingest sst File spent time %d milli-seconds\n", (t2-t1)/1000000)
+	logger.Printf("Ingest sst File spent time %d milli-seconds\n", (t2-t1)/1000000)
 }

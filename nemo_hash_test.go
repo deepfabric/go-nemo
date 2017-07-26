@@ -21,7 +21,7 @@ func BenchmarkHashSet(b *testing.B) {
 
 	var length int = 10
 	var kNum int = 1000
-	opts := NewOptions()
+	opts := NewDefaultOptions()
 	n := OpenNemo(opts, "/tmp/go-benchmark/go-nemo/")
 	rand.Seed(time.Now().Unix())
 	b.ResetTimer()

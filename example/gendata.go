@@ -3,21 +3,71 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
 
 	gonemo "github.com/deepfabric/go-nemo"
 	datagen "github.com/deepfabric/go-nemo/datagen"
 )
 
+var optFile = flag.String("nemo-option", "./option.json", "option file for nemo")
+
 func main() {
+
+	str := time.Now().Format("2006-01-02T15:04:05")
+	str = strings.Replace(str, "-", "", -1)
+	str = strings.Replace(str, ":", "", -1)
+	logFilename := "gendata-benchmark-" + str + ".log"
+	logFileHandle, err := os.Create(logFilename)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	logger := log.New(logFileHandle, "", log.LstdFlags)
+
 	flag.Parse()
 	cfg, err := datagen.LoadConfig(*datagen.CfgFile)
 	if err == nil {
-		fmt.Println(*cfg)
+		fmt.Printf("generat data type hash:\n")
+		fmt.Printf("key_length:	%d\n", cfg.Hash.KeyLen)
+		fmt.Printf("field_length:	%d\n", cfg.Hash.FieldLen)
+		fmt.Printf("value_length:	%d\n", cfg.Hash.ValueLen)
+		fmt.Printf("table_count:	%d\n", cfg.Hash.TableCount)
+		fmt.Printf("entry_count:	%d\n", cfg.Hash.EntryCount)
+		fmt.Printf("thread count:	%d\n", cfg.Hash.ThreadNum)
+
+		logger.Printf("generat data type hash:\n")
+		logger.Printf("key_length:	%d\n", cfg.Hash.KeyLen)
+		logger.Printf("field_length:	%d\n", cfg.Hash.FieldLen)
+		logger.Printf("table_count:	%d\n", cfg.Hash.TableCount)
+		logger.Printf("value_length:	%d\n", cfg.Hash.ValueLen)
+		logger.Printf("entry_count:	%d\n", cfg.Hash.EntryCount)
+		logger.Printf("thread count:	%d\n", cfg.Hash.ThreadNum)
 	} else {
 		return
 	}
 
-	opts := gonemo.NewOptions()
+	opts, jsonConf := gonemo.NewOptions(*optFile)
+	if opts == nil {
+		fmt.Println("nemo options init failed")
+		return
+	}
+
+	logger.Printf("nemo conf:\n")
+	logger.Printf("CreateIfMissing:	%t\n", jsonConf.CreateIfMissing)
+	logger.Printf("WriteBufferSize:	%dMegaByte\n", jsonConf.WriteBufferSize)
+	logger.Printf("MaxOpenFiles:	%d\n", jsonConf.MaxOpenFiles)
+	logger.Printf("UseBloomfilter:	%t\n", jsonConf.UseBloomfilter)
+	logger.Printf("WriteThreads:	%d\n", jsonConf.WriteThreads)
+	logger.Printf("TargetFileSizeBase:	%dMegaByte\n", jsonConf.TargetFileSizeBase)
+	logger.Printf("Compression:	%t\n", jsonConf.Compression)
+	logger.Printf("MaxBackgroundFlushes:	%d\n", jsonConf.MaxBackgroundFlushes)
+	logger.Printf("MaxBackgroundCompactions:	%d\n", jsonConf.MaxBackgroundCompactions)
+	logger.Printf("MaxBytesForLevelMultiplier:	%d\n", jsonConf.MaxBytesForLevelMultiplier)
+
+	t1 := time.Now().UnixNano()
 	n := gonemo.OpenNemo(opts, cfg.NemoPath)
 
 	done := make(chan int)
@@ -29,5 +79,9 @@ func main() {
 	for t := 0; t < threads; t++ {
 		<-done
 	}
+
+	t2 := time.Now().UnixNano()
 	fmt.Println("Hash Insert done!")
+	fmt.Printf("spend [%d] milli-seconds to insert data\n", (t2-t1)/1000000)
+	logger.Printf("spend [%d] milli-seconds to insert data\n", (t2-t1)/1000000)
 }
