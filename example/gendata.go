@@ -16,6 +16,8 @@ var optFile = flag.String("nemo-option", "./option.json", "option file for nemo"
 
 func main() {
 
+	flag.Parse()
+
 	str := time.Now().Format("2006-01-02T15:04:05")
 	str = strings.Replace(str, "-", "", -1)
 	str = strings.Replace(str, ":", "", -1)
@@ -27,7 +29,6 @@ func main() {
 	}
 	logger := log.New(logFileHandle, "", log.LstdFlags)
 
-	flag.Parse()
 	cfg, err := datagen.LoadConfig(*datagen.CfgFile)
 	if err == nil {
 		fmt.Printf("generat data type hash:\n")

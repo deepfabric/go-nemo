@@ -20,6 +20,8 @@ var optFile = flag.String("nemo-option", "./option.json", "option file for nemo"
 
 func main() {
 
+	flag.Parse()
+
 	str := time.Now().Format("2006-01-02T15:04:05")
 	str = strings.Replace(str, "-", "", -1)
 	str = strings.Replace(str, ":", "", -1)
@@ -31,7 +33,6 @@ func main() {
 	}
 	logger := log.New(logFileHandle, "ingest benchmark", log.LstdFlags)
 
-	flag.Parse()
 	keys := strings.Split(*keyRange, ":")
 	if len(keys) != 2 {
 		fmt.Printf("input argument key-range[%s] is wrong!\n", *keyRange)
