@@ -18,10 +18,12 @@ import (
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
 var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
-var pLength = flag.Int("length", 10, "length for the hash table member key")
-var pkNum = flag.Int("n", 1000, "max count for the hash table name")
-var pCnt = flag.Int("count", 10000, "query time")
+var pKeyLen = flag.Int("k",10,"length for key")
+var pValLen = flag.Int("v",20,"length for value")
+var pValRandom = flag.Bool("r", false, "random value")
+var pCnt = flag.Int("c", 10000, "query count")
 var pThread = flag.Int("p", 1, "parallel thread")
+var pBatchSize = flag.Int("b",1,"batch write size")
 
 var alphabet = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
@@ -36,17 +38,26 @@ func genString(length int, r *rand.Rand) []byte {
 func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 	iSumTime[thread] = 0
         r := rand.New(rand.NewSource(time.Now().Unix()))
-	for i := 0; i < *pCnt; i++ {
-		HKey := append([]byte(strconv.Itoa(thread)), []byte(strconv.Itoa(r.Intn(*pkNum)))...)
-		field := genString(*pLength,r)
-		value := genString(*pLength,r)
-		t1 := time.Now().UnixNano()
-		_, err := n.HSet(HKey, field, value)
-		t2 := time.Now().UnixNano()
-		iSumTime[thread] += t2 - t1
-		if err != nil {
-			fmt.Println("HSet Err!")
+	loops := (*pCnt) / (*pBatchSize)
+	Keys   := make([][]byte,*pBatchSize)
+	Values := make([][]byte,*pBatchSize)
+	for i := 0; i < loops; i++ {
+	    for j :=0; j < *pBatchSize; j++ {
+		Keys[j] = append([]byte(strconv.Itoa(thread*1000000+i)), genString(*pKeyLen,r)...)
+		if *pValRandom == true {
+		  Values[j] = genString(*pValLen,r)
+		} else {
+		  Values[j] = append([]byte(strconv.Itoa(i)),make([]byte,*pValLen)...)
 		}
+	    }
+            t1 := time.Now().UnixNano()
+            err := n.MSet(Keys, Values)
+            t2 := time.Now().UnixNano()
+            iSumTime[thread] += t2 - t1
+            if err != nil {
+                fmt.Println("Set Err!")
+            }
+
 	}
 	fmt.Print("Thread done:")
 	fmt.Println(thread)
@@ -110,5 +121,5 @@ func main() {
 	fmt.Print(float32(sum) / float32(*pCnt))
 	fmt.Println(" per ops")
 	fmt.Print("QPS: ")
-	fmt.Println(float32(*pCnt*threads*threads) / float32(sum) * 1000000000)
+	fmt.Println(float64(*pCnt*threads*threads*(*pBatchSize)) / float64(sum) * 1000000000)
 }
