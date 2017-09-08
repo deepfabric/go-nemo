@@ -87,6 +87,14 @@ func (it *KIterator) Key() []byte {
 	return res
 }
 
+// KeyPoint Return the key entry pointer which points to c memory
+func (it *KIterator) KeyPoint() (*C.char, C.size_t) {
+	var cRes *C.char
+	var cLen C.size_t
+	cRes = C.KROkey(it.c, &cLen)
+	return cRes, cLen
+}
+
 // Value Return the value entry of the iterator
 func (it *KIterator) Value() []byte {
 	var cRes *C.char
@@ -95,6 +103,14 @@ func (it *KIterator) Value() []byte {
 	cRes = C.KROvalue(it.c, &cLen)
 	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
 	return res
+}
+
+// ValuePoint Return the value entry pointer which points to c memory
+func (it *KIterator) ValuePoint() (*C.char, C.size_t) {
+	var cRes *C.char
+	var cLen C.size_t
+	cRes = C.KROvalue(it.c, &cLen)
+	return cRes, cLen
 }
 
 // Free Release the iterator
@@ -128,9 +144,8 @@ func (it *VolumeIterator) Key() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
-	C.Volkey(it.c, &cRes, &cLen)
+	cRes = C.Volkey(it.c, &cLen)
 	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	C.free(unsafe.Pointer(cRes))
 	return res
 }
 
