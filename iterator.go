@@ -82,9 +82,8 @@ func (it *KIterator) Key() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
-	C.KROkey(it.c, &cRes, &cLen)
+	cRes = C.KROkey(it.c, &cLen)
 	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	C.free(unsafe.Pointer(cRes))
 	return res
 }
 
@@ -93,9 +92,8 @@ func (it *KIterator) Value() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
-	C.KROvalue(it.c, &cRes, &cLen)
+	cRes = C.KROvalue(it.c, &cLen)
 	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	C.free(unsafe.Pointer(cRes))
 	return res
 }
 
