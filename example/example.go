@@ -223,6 +223,24 @@ func main() {
 		fmt.Println(vit.Value())
 	}
 	vit.Free()
+	vit = n.NewVolumeIterator([]byte("A"), []byte("x"))
+	if vit.TargetScan(1) {
+		fmt.Println("find the targe key: ")
+		fmt.Println(string(vit.TargetKey()))
+	} else {
+		fmt.Println("can't find the targe key, current total volume: ")
+		fmt.Println(vit.TotalVolume())
+	}
+	vit.Free()
+	vit = n.NewVolumeIterator([]byte("A"), []byte("x"))
+	if vit.TargetScan(100) {
+		fmt.Println("find the targe key: ")
+		fmt.Println(string(vit.TargetKey()))
+	} else {
+		fmt.Println("can't find the targe key, current total volume: ")
+		fmt.Println(vit.TotalVolume())
+	}
+	vit.Free()
 	/*
 		kit := n.KScan([]byte("A"), []byte("x"), 100)
 		for ; kit.Valid(); kit.Next() {

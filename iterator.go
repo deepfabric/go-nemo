@@ -143,6 +143,29 @@ func (it *VolumeIterator) Value() int64 {
 	return int64(cRes)
 }
 
+// TargetScan find whether range volume is large than input target volume
+// call it immediately after new a VolumeIterator
+// must not call this func after iterator Next()!
+func (it *VolumeIterator) TargetScan(target int64) bool {
+	return bool(C.VoltargetScan(it.c, C.int64_t(target)))
+}
+
+// TargetKey Return the target key if targetScan return true otherwise return nil
+func (it *VolumeIterator) TargetKey() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	C.VoltargetKey(it.c, &cRes, &cLen)
+	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
+	C.free(unsafe.Pointer(cRes))
+	return res
+}
+
+// TotalVolume return current total volume if targetScan return false,otherwise return 0
+func (it *VolumeIterator) TotalVolume() int64 {
+	return int64(C.VoltotalVolume(it.c))
+}
+
 // Free Release the iterator
 func (it *VolumeIterator) Free() {
 	C.VolIteratorFree(it.c)
