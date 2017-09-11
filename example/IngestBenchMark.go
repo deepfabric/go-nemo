@@ -58,16 +58,17 @@ func main() {
 	}
 
 	logger.Printf("nemo conf:\n")
-	logger.Printf("CreateIfMissing:	%t\n", jsonConf.CreateIfMissing)
-	logger.Printf("WriteBufferSize:	%dMegaByte\n", jsonConf.WriteBufferSize)
-	logger.Printf("MaxOpenFiles:	%d\n", jsonConf.MaxOpenFiles)
-	logger.Printf("UseBloomfilter:	%t\n", jsonConf.UseBloomfilter)
-	logger.Printf("WriteThreads:	%d\n", jsonConf.WriteThreads)
-	logger.Printf("TargetFileSizeBase:	%dMegaByte\n", jsonConf.TargetFileSizeBase)
-	logger.Printf("Compression:	%t\n", jsonConf.Compression)
-	logger.Printf("MaxBackgroundFlushes:	%d\n", jsonConf.MaxBackgroundFlushes)
-	logger.Printf("MaxBackgroundCompactions:	%d\n", jsonConf.MaxBackgroundCompactions)
-	logger.Printf("MaxBytesForLevelMultiplier:	%d\n", jsonConf.MaxBytesForLevelMultiplier)
+	logger.Printf("CreateIfMissing:	%t\n", jsonConf.Db.CreateIfMissing)
+	logger.Printf("WriteBufferSize:	%dMegaByte\n", jsonConf.Db.WriteBufferSize)
+	logger.Printf("MaxOpenFiles:	%d\n", jsonConf.Db.MaxOpenFiles)
+	logger.Printf("UseBloomfilter:	%t\n", jsonConf.Db.UseBloomfilter)
+	logger.Printf("WriteThreads:	%d\n", jsonConf.Db.WriteThreads)
+	logger.Printf("TargetFileSizeBase:	%dMegaByte\n", jsonConf.Db.TargetFileSizeBase)
+	logger.Printf("TargetFileSizeMultiplier: %d\n", jsonConf.Db.TargetFileSizeMultiplier)
+	logger.Printf("Compression:	%t\n", jsonConf.Db.Compression)
+	logger.Printf("MaxBackgroundFlushes:	%d\n", jsonConf.Db.MaxBackgroundFlushes)
+	logger.Printf("MaxBackgroundCompactions:	%d\n", jsonConf.Db.MaxBackgroundCompactions)
+	logger.Printf("MaxBytesForLevelMultiplier:	%d\n", jsonConf.Db.MaxBytesForLevelMultiplier)
 
 	n := gonemo.OpenNemo(opts, *srcPath)
 

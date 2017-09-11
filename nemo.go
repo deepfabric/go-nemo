@@ -9,12 +9,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"unsafe"
+
+	slab "github.com/funny/slab"
 )
 
-// Options nemo instance option
+// Options go-nemo instance option
 type Options struct {
 	c *C.nemo_options_t
+	p *MemPoolOpt
 }
+
+// MemPool for go-nemo
+var MemPool *slab.SyncPool
 
 // NEMO instance handle
 type NEMO struct {
@@ -29,11 +35,17 @@ func NewDefaultOptions() *Options {
 
 	return &Options{
 		c: opts,
+		p: &MemPoolOpt{
+			MinMemPoolChunkSize: 8,        // The smallest chunk size is 64B.
+			MaxMemPoolChunkSize: 4 * 1024, // The largest chunk size is 64KB.
+			MemPoolFactor:       2,        // Power of 2 growth in chunk size.
+		},
 	}
 }
 
-// JSONOpt nemo options with json format
-type JSONOpt struct {
+// RocksOpt rocksdb options for go nemo
+type RocksOpt struct {
+	// options for nemo rocksdb
 	CreateIfMissing            bool `json:"create_if_missing"`
 	WriteBufferSize            int  `json:"write_buffer_size"`
 	MaxOpenFiles               int  `json:"max_open_files"`
@@ -47,12 +59,29 @@ type JSONOpt struct {
 	MaxBytesForLevelMultiplier int  `json:"max_bytes_for_level_multiplier"`
 }
 
+// MemPoolOpt memory pool option for go-nemo
+type MemPoolOpt struct {
+	// options for golang mem pool
+	MinMemPoolChunkSize int `json:"min_mempool_chunk_size"`
+	MaxMemPoolChunkSize int `json:"max_mempool_chunk_size"`
+	MemPoolFactor       int `json:"mempool_factor"`
+}
+
+// JSONOpt nemo options with json format
+type JSONOpt struct {
+	// options for nemo rocksdb
+	Db RocksOpt `json:"rocksdb"`
+	// options for golang mem pool
+	Pool MemPoolOpt `json:"mem_pool"`
+}
+
 // NewOptions Create new options for nemo
 func NewOptions(nemoConf string) (*Options, *JSONOpt) {
 
 	bytes, err := ioutil.ReadFile(nemoConf)
 	if err != nil {
 		fmt.Printf("Read nemo config File[%s] err: %s\n", nemoConf, err.Error())
+		panic("init error!")
 		return nil, nil
 	}
 
@@ -60,30 +89,31 @@ func NewOptions(nemoConf string) (*Options, *JSONOpt) {
 	err = json.Unmarshal(bytes, &jopt)
 	if err != nil {
 		fmt.Printf("Parse jsonfile[%s] err: %s\n", nemoConf, err.Error())
+		panic("init error!")
 		return nil, nil
 	}
 
 	cOpts := C.nemo_CreateOption()
 
 	var goOpts = C.GoNemoOpts{
-		create_if_missing: C.bool(jopt.CreateIfMissing),
-		write_buffer_size: C.int(jopt.WriteBufferSize * 1024 * 1024),
-		max_open_files:    C.int(jopt.MaxOpenFiles),
-		use_bloomfilter:   C.bool(jopt.UseBloomfilter),
-		write_threads:     C.int(jopt.WriteThreads),
+		create_if_missing: C.bool(jopt.Db.CreateIfMissing),
+		write_buffer_size: C.int(jopt.Db.WriteBufferSize * 1024 * 1024),
+		max_open_files:    C.int(jopt.Db.MaxOpenFiles),
+		use_bloomfilter:   C.bool(jopt.Db.UseBloomfilter),
+		write_threads:     C.int(jopt.Db.WriteThreads),
 
 		// default target_file_size_base and multiplier is the same as rocksdb
-		target_file_size_base:          C.int(jopt.TargetFileSizeBase * 1024 * 1024),
-		target_file_size_multiplier:    C.int(jopt.TargetFileSizeMultiplier),
-		compression:                    C.bool(jopt.Compression),
-		max_background_flushes:         C.int(jopt.MaxBackgroundFlushes),
-		max_background_compactions:     C.int(jopt.MaxBackgroundCompactions),
-		max_bytes_for_level_multiplier: C.int(jopt.MaxBytesForLevelMultiplier),
+		target_file_size_base:          C.int(jopt.Db.TargetFileSizeBase * 1024 * 1024),
+		target_file_size_multiplier:    C.int(jopt.Db.TargetFileSizeMultiplier),
+		compression:                    C.bool(jopt.Db.Compression),
+		max_background_flushes:         C.int(jopt.Db.MaxBackgroundFlushes),
+		max_background_compactions:     C.int(jopt.Db.MaxBackgroundCompactions),
+		max_bytes_for_level_multiplier: C.int(jopt.Db.MaxBytesForLevelMultiplier),
 	}
 
 	C.nemo_SetOptions(cOpts, &goOpts)
 
-	return &Options{c: cOpts}, &jopt
+	return &Options{c: cOpts, p: &jopt.Pool}, &jopt
 }
 
 // OpenNemo return a nemo handle
@@ -93,6 +123,11 @@ func OpenNemo(opts *Options, path string) *NEMO {
 	)
 	defer C.free(unsafe.Pointer(cPath))
 	nemo := C.nemo_Create(cPath, opts.c)
+	MemPool = slab.NewSyncPool(
+		opts.p.MinMemPoolChunkSize,
+		opts.p.MaxMemPoolChunkSize,
+		opts.p.MemPoolFactor,
+	)
 	return &NEMO{
 		c:      nemo,
 		dbPath: path,

@@ -5,6 +5,7 @@ package gonemo
 import "C"
 import (
 	"errors"
+	"reflect"
 	"unsafe"
 )
 
@@ -77,40 +78,63 @@ func (it *KIterator) Valid() bool {
 	return bool(C.KROValid(it.c))
 }
 
-// Key Return the key entry of the iterator
+// Key Return the key entry, just valid at current iterator cursor
 func (it *KIterator) Key() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
 	cRes = C.KROkey(it.c, &cLen)
-	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	return res
+
+	var k []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&k))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return k
 }
 
-// KeyPoint Return the key entry pointer which points to c memory
-func (it *KIterator) KeyPoint() (*C.char, C.size_t) {
+// PooledKey Return the key entry locates at memory pool,
+// must return it to memory pool if you don't use it anymore
+func (it *KIterator) PooledKey() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 	cRes = C.KROkey(it.c, &cLen)
-	return cRes, cLen
+
+	var k []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&k))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+
+	buf := MemPool.Alloc(int(cLen))
+	copy(buf, k)
+	return buf
 }
 
-// Value Return the value entry of the iterator
+// Value Return the value entry, just valid at current iterator cursor
 func (it *KIterator) Value() []byte {
 	var cRes *C.char
 	var cLen C.size_t
 
 	cRes = C.KROvalue(it.c, &cLen)
-	res := C.GoBytes(unsafe.Pointer(cRes), C.int(cLen))
-	return res
+
+	var v []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&v))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return v
 }
 
-// ValuePoint Return the value entry pointer which points to c memory
-func (it *KIterator) ValuePoint() (*C.char, C.size_t) {
+// PooledValue Return the value entry locates at memory pool,
+// must return it to memory pool if you don't use it anymore
+func (it *KIterator) PooledValue() []byte {
 	var cRes *C.char
 	var cLen C.size_t
+
 	cRes = C.KROvalue(it.c, &cLen)
-	return cRes, cLen
+
+	var v []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&v))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+
+	buf := MemPool.Alloc(int(cLen))
+	copy(buf, v)
+	return buf
 }
 
 // Free Release the iterator

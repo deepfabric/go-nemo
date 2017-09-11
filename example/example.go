@@ -13,7 +13,7 @@ import (
 
 func main() {
 	//opts := gonemo.NewDefaultOptions()
-	opts := gonemo.NewDefaultOptions()
+	opts, _ := gonemo.NewOptions("option.json")
 	n := gonemo.OpenNemo(opts, "/tmp/go-nemo/")
 	key := []byte("Hello")
 	field := []byte("Hello")
@@ -194,10 +194,21 @@ func main() {
 		fmt.Println("success to BatchWrite")
 	}
 
-	kit := n.KScanWithHandle(h1, []byte("BK1"), []byte("BK4"), true)
+	kit := n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
 	for ; kit.Valid(); kit.Next() {
-		fmt.Println("meta iterator key:" + string(kit.Key()))
-		fmt.Println("meta iterator val:" + string(kit.Value()))
+		fmt.Println("raw iterator ephemeral key:" + string(kit.Key()))
+		fmt.Println("raw iterator ephemeral val:" + string(kit.Value()))
+	}
+	kit.Free()
+
+	kit = n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
+	for ; kit.Valid(); kit.Next() {
+		k := kit.PooledKey()
+		fmt.Println("raw iterator pooled key:" + string(k))
+		gonemo.MemPool.Free(k)
+		v := kit.PooledValue()
+		fmt.Println("raw iterator pooled val:" + string(v))
+		gonemo.MemPool.Free(v)
 	}
 	kit.Free()
 
@@ -320,10 +331,10 @@ func main() {
 	vit.Free()
 
 	h1 = n.GetMetaHandle()
-	kit = n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
+	kit = n.KScanWithHandle(h1, []byte("BK1"), []byte("BK4"), true)
 	for ; kit.Valid(); kit.Next() {
-		fmt.Println("raw iterator key:" + string(kit.Key()))
-		fmt.Println("raw iterator val:" + string(kit.Value()))
+		fmt.Println("meta iterator key:" + string(kit.Key()))
+		fmt.Println("meta iterator val:" + string(kit.Value()))
 	}
 	kit.Free()
 
