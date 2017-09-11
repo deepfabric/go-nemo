@@ -28,14 +28,14 @@ func (nemo *NEMO) Get(key []byte) ([]byte, error) {
 	var cLen C.size_t
 	var cErr *C.char
 
-	C.nemo_Get(nemo.c, goByte2char(key), C.size_t(len(key)), &cVal, &cLen, &cErr)
+	cCppStr := C.nemo_Get(nemo.c, goByte2char(key), C.size_t(len(key)), &cVal, &cLen, &cErr)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
 		return nil, res
 	}
 	val := C.GoBytes(unsafe.Pointer(cVal), C.int(cLen))
-	C.free(unsafe.Pointer(cVal))
+	C.nemo_delCppStr(cCppStr)
 	return val, nil
 }
 
