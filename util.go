@@ -8,11 +8,14 @@ import (
 	"unsafe"
 )
 
-func nemoStr2GoByte(str *C.nemoStr) []byte {
-	var value []byte
-	sH := (*reflect.SliceHeader)(unsafe.Pointer(&value))
-	sH.Cap, sH.Len, sH.Data = int(str.len), int(str.len), uintptr(unsafe.Pointer(str.data))
-	return value
+// FreeCppStr release the memory of a cpp string object
+func FreeCppStr(str unsafe.Pointer) {
+	C.nemo_delCppStr(str)
+}
+
+// FreeCppSSVector release the memory of a cpp ss vector object
+func FreeCppSSVector(vp unsafe.Pointer) {
+	C.nemo_delSSVector(vp)
 }
 
 func goByte2char(b []byte) *C.char {
@@ -62,11 +65,19 @@ func cStr2Slice(data **C.char, length int) []*C.char {
 	return res
 }
 
-func cSlice2MultiByte(n int, datalist []*C.char, lenlist []C.size_t) [][]byte {
+func cArray2goMSliceObj(n int, datalist []*C.char, lenlist []C.size_t) [][]byte {
 	mb := make([][]byte, n)
 	for i := range mb {
 		mb[i] = C.GoBytes(unsafe.Pointer(datalist[i]), C.int(lenlist[i]))
-		C.free(unsafe.Pointer(datalist[i]))
+	}
+	return mb
+}
+
+func cArray2goMSlice(n int, datalist []*C.char, lenlist []C.size_t) [][]byte {
+	mb := make([][]byte, n)
+	for i := range mb {
+		sH := (*reflect.SliceHeader)(unsafe.Pointer(&mb[i]))
+		sH.Cap, sH.Len, sH.Data = int(lenlist[i]), int(lenlist[i]), uintptr(unsafe.Pointer(datalist[i]))
 	}
 	return mb
 }

@@ -5,6 +5,7 @@ package gonemo
 import "C"
 import (
 	"errors"
+	"reflect"
 	"unsafe"
 )
 
@@ -59,7 +60,7 @@ func (nemo *NEMO) GetWithHandle(db *DBNemo, key []byte) ([]byte, error) {
 	var cVal *C.char
 	var cLen C.size_t
 	var cErr *C.char
-	C.nemo_GetWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)),
+	cCppStr := C.nemo_GetWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)),
 		&cVal, &cLen,
 		&cErr,
 	)
@@ -70,8 +71,32 @@ func (nemo *NEMO) GetWithHandle(db *DBNemo, key []byte) ([]byte, error) {
 	}
 
 	val := C.GoBytes(unsafe.Pointer(cVal), C.int(cLen))
-	C.free(unsafe.Pointer(cVal))
+	C.nemo_delCppStr(cCppStr)
 	return val, nil
+}
+
+// GetWithHandleUnSafe Get a key value pair with a db handle
+// The second return value is a cpp pointer points to cpp string object.
+// Must use func 'FreeCppStr' to free the cpp string object if you don't use the value slice
+func (nemo *NEMO) GetWithHandleUnSafe(db *DBNemo, key []byte) ([]byte, unsafe.Pointer, error) {
+	var cVal *C.char
+	var cLen C.size_t
+	var cErr *C.char
+	cCppStr := C.nemo_GetWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)),
+		&cVal, &cLen,
+		&cErr,
+	)
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return nil, nil, res
+	}
+
+	var v []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&v))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cVal))
+
+	return v, cCppStr, nil
 }
 
 // DeleteWithHandle Delete a key value pair with a db handle

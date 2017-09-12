@@ -186,7 +186,7 @@ func (nemo *NEMO) HMGet(key []byte, fields [][]byte) ([][]byte, []error) {
 		cfieldlist[i] = goBytedup2char(filed)
 		cfieldlen[i] = C.size_t(len(filed))
 	}
-	C.nemo_HMGet(nemo.c, goByte2char(key), C.size_t(len(key)), C.int(l),
+	vp := C.nemo_HMGet(nemo.c, goByte2char(key), C.size_t(len(key)), C.int(l),
 		(**C.char)(unsafe.Pointer(&cfieldlist[0])),
 		(*C.size_t)(unsafe.Pointer(&cfieldlen[0])),
 		(**C.char)(unsafe.Pointer(&cvallist[0])),
@@ -206,7 +206,49 @@ func (nemo *NEMO) HMGet(key []byte, fields [][]byte) ([][]byte, []error) {
 			C.free(unsafe.Pointer(cerr))
 		}
 	}
-	return cSlice2MultiByte(l, cvallist, cvallen), errs
+	res := cArray2goMSliceObj(l, cvallist, cvallen)
+	FreeCppSSVector(vp)
+	return res, errs
+}
+
+// HMGetUnSafe Get multi values of multi fields in a hash table
+// The second return value is the cpp vector pointer
+// Must use func 'FreeCppSSVector' to free the cpp vector object if you don't use the value slice array
+func (nemo *NEMO) HMGetUnSafe(key []byte, fields [][]byte) ([][]byte, unsafe.Pointer, []error) {
+	l := len(fields)
+	cfieldlist := make([]*C.char, l)
+	cfieldlen := make([]C.size_t, l)
+	cvallist := make([]*C.char, l)
+	cvallen := make([]C.size_t, l)
+	cErrs := make([]*C.char, l)
+	errs := make([]error, l)
+	var ErrOK *C.char
+	for i, filed := range fields {
+		cfieldlist[i] = goBytedup2char(filed)
+		cfieldlen[i] = C.size_t(len(filed))
+	}
+	vp := C.nemo_HMGet(nemo.c, goByte2char(key), C.size_t(len(key)), C.int(l),
+		(**C.char)(unsafe.Pointer(&cfieldlist[0])),
+		(*C.size_t)(unsafe.Pointer(&cfieldlen[0])),
+		(**C.char)(unsafe.Pointer(&cvallist[0])),
+		(*C.size_t)(unsafe.Pointer(&cvallen[0])),
+		(**C.char)(unsafe.Pointer(&cErrs[0])),
+		&ErrOK,
+	)
+	for _, field := range cfieldlist {
+		C.free(unsafe.Pointer(field))
+	}
+
+	for i, cerr := range cErrs {
+		if cerr == nil {
+			errs[i] = nil
+		} else {
+			errs[i] = errors.New(C.GoString(cerr))
+			C.free(unsafe.Pointer(cerr))
+		}
+	}
+
+	return cArray2goMSlice(l, cvallist, cvallen), vp, errs
 }
 
 // HMSet Set multi fields with multi values in a hash table

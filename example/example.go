@@ -32,20 +32,6 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
-
-	//Get0
-	ResValue0, err := n.Get0(key)
-	defer ResValue0.Free()
-	if err == nil {
-		fmt.Print("success to Get0 value:")
-		res := ResValue0.Data()
-		fmt.Println("value:" + string(res))
-		if equal(res, value) {
-			fmt.Println("Get0 value correct!")
-		}
-	} else {
-		fmt.Println(err)
-	}
 	//Get
 	ResValue, err := n.Get(key)
 	if err == nil {
@@ -57,7 +43,18 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
-
+	//GetUnSafe
+	ResValue, cppStr, err := n.GetUnSafe(key)
+	if err == nil {
+		fmt.Print("success to Get value:")
+		fmt.Println("value:" + string(ResValue))
+		if equal(ResValue, value) {
+			fmt.Println("Get value correct!")
+		}
+	} else {
+		fmt.Println(err)
+	}
+	gonemo.FreeCppStr(cppStr)
 	//Mset
 	err = n.MSet(keys, vals)
 	if err != nil {
@@ -69,15 +66,35 @@ func main() {
 	ResVals, errs := n.MGet(keys)
 	fmt.Println("MGet result:")
 	for i, err := range errs {
-		fmt.Println(err)
-		fmt.Println("key" + string(keys[i]))
-		fmt.Println("value" + string(ResVals[i]))
-		if equal(vals[i], ResVals[i]) {
-			fmt.Printf("get value[%d] correct\n", i)
+		if err != nil {
+			fmt.Println(err)
 		} else {
-			fmt.Printf("get value[%d] wrong\n", i)
+			fmt.Println("key " + string(keys[i]))
+			fmt.Println("value " + string(ResVals[i]))
+			if equal(vals[i], ResVals[i]) {
+				fmt.Printf("get value[%d] correct\n", i)
+			} else {
+				fmt.Printf("get value[%d] wrong\n", i)
+			}
 		}
 	}
+	//MGetUnSafe
+	ResVals, vp, errs := n.MGetUnSafe(keys)
+	fmt.Println("MGetUnSafe result:")
+	for i, err := range errs {
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println("key " + string(keys[i]))
+			fmt.Println("value " + string(ResVals[i]))
+			if equal(vals[i], ResVals[i]) {
+				fmt.Printf("get value[%d] correct\n", i)
+			} else {
+				fmt.Printf("get value[%d] wrong\n", i)
+			}
+		}
+	}
+	gonemo.FreeCppSSVector(vp)
 	//Keys
 	ResKeys, err := n.Keys([]byte("*"))
 	if err == nil {
@@ -133,6 +150,21 @@ func main() {
 			fmt.Printf("get value[%d] wrong\n", i)
 		}
 	}
+	//HMGetUnSafe
+	ResVals, vp, errs = n.HMGetUnSafe(Hkey, fields)
+	fmt.Println("HMGet result:")
+	for i, err := range errs {
+		fmt.Println(err)
+		fmt.Println("field" + string(fields[i]))
+		fmt.Println("value" + string(ResVals[i]))
+		if equal(vals[i], ResVals[i]) {
+			fmt.Printf("get value[%d] correct\n", i)
+		} else {
+			fmt.Printf("get value[%d] wrong\n", i)
+		}
+	}
+	gonemo.FreeCppSSVector(vp)
+
 	//List Push
 	len, err := n.LPush([]byte("List1"), []byte("world"))
 	if err == nil {
@@ -175,6 +207,16 @@ func main() {
 		fmt.Println("key:" + string(key))
 		fmt.Println("value:" + string(value))
 	}
+	value, cppStr, err = n.GetWithHandleUnSafe(h1, key)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to GetWithHandle")
+		fmt.Println("key:" + string(key))
+		fmt.Println("value:" + string(value))
+	}
+	gonemo.FreeCppStr(cppStr)
+
 	err = n.DeleteWithHandle(h1, key)
 	if err != nil {
 		fmt.Println(err)

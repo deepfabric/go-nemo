@@ -82,7 +82,6 @@ func NewOptions(nemoConf string) (*Options, *JSONOpt) {
 	if err != nil {
 		fmt.Printf("Read nemo config File[%s] err: %s\n", nemoConf, err.Error())
 		panic("init error!")
-		return nil, nil
 	}
 
 	var jopt JSONOpt
@@ -90,7 +89,6 @@ func NewOptions(nemoConf string) (*Options, *JSONOpt) {
 	if err != nil {
 		fmt.Printf("Parse jsonfile[%s] err: %s\n", nemoConf, err.Error())
 		panic("init error!")
-		return nil, nil
 	}
 
 	cOpts := C.nemo_CreateOption()
