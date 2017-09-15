@@ -14,6 +14,11 @@ type KIterator struct {
 	c *C.nemo_KIteratorRO_t
 }
 
+// HmetaIterator is hash db meta info iterator
+type HmetaIterator struct {
+	c *C.nemo_HmetaIterator_t
+}
+
 // VolumeIterator is a iterator for five type data volume
 type VolumeIterator struct {
 	c *C.nemo_VolumeIterator_t
@@ -140,6 +145,74 @@ func (it *KIterator) PooledValue() []byte {
 // Free Release the iterator
 func (it *KIterator) Free() {
 	C.KROIteratorFree(it.c)
+}
+
+// HmeataScan return a kv iterator
+func (nemo *NEMO) HmeataScan(start []byte, end []byte, UseSnapshot bool) *HmetaIterator {
+	var hit HmetaIterator
+	hit.c = C.nemo_HmetaScan(nemo.c,
+		goByte2char(start), C.size_t(len(start)),
+		goByte2char(end), C.size_t(len(end)),
+		C.bool(UseSnapshot),
+	)
+	return &hit
+}
+
+// Next Move the iterator to the next element
+func (it *HmetaIterator) Next() {
+	C.HmetaNext(it.c)
+}
+
+// Valid Return true if the iterator is valid
+func (it *HmetaIterator) Valid() bool {
+	return bool(C.HmetaValid(it.c))
+}
+
+// Key Return the key entry, just valid at current iterator cursor
+func (it *HmetaIterator) Key() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	cRes = C.HmetaKey(it.c, &cLen)
+
+	var k []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&k))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return k
+}
+
+// PooledKey Return the key entry locates at memory pool,
+// must return it to memory pool if you don't use it anymore
+func (it *HmetaIterator) PooledKey() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+	cRes = C.HmetaKey(it.c, &cLen)
+
+	var k []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&k))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+
+	buf := MemPool.Alloc(int(cLen))
+	copy(buf, k)
+	return buf
+}
+
+// IndexInfo Return the IndexInfo, just valid at current iterator cursor
+func (it *HmetaIterator) IndexInfo() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	cRes = C.HmetaIndexInfo(it.c, &cLen)
+
+	var index []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&index))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return index
+}
+
+// Free Release the iterator
+func (it *HmetaIterator) Free() {
+	C.HmetaIteratorFree(it.c)
 }
 
 // NewVolumeIterator Return the volume iterator
