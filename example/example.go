@@ -130,6 +130,24 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
+
+	indexInfo := []byte("indexInfo")
+	err = n.HSetIndexInfo(Hkey, indexInfo)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("success to HSetIndexInfo")
+	}
+	resIndexInfo, err := n.HGetIndexInfo(Hkey)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		if equal(indexInfo, resIndexInfo) {
+			fmt.Println("success to HGetIndexInfo")
+		} else {
+			fmt.Printf("get index info[%s] wrong\n", string(resIndexInfo))
+		}
+	}
 	//HMset
 	_, err = n.HMSet(Hkey, fields, vals)
 	if err != nil {
@@ -164,6 +182,16 @@ func main() {
 		}
 	}
 	gonemo.FreeCppSSVector(vp)
+
+	hmit := n.HmeataScan([]byte("A"), []byte("x"), true)
+	for ; hmit.Valid(); hmit.Next() {
+		fmt.Println("hmeta iterator key: " + string(hmit.Key()))
+		k := hmit.PooledKey()
+		fmt.Println("hmeta iterator pooled key: " + string(k))
+		gonemo.MemPool.Free(k)
+		fmt.Println("hmeta iterator indexInfo: " + string(hmit.IndexInfo()))
+	}
+	hmit.Free()
 
 	//List Push
 	len, err := n.LPush([]byte("List1"), []byte("world"))

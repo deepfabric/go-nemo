@@ -24,6 +24,7 @@ var pValLen = flag.Int("v", 20, "length for value")
 var pValRandom = flag.Bool("r", false, "random value")
 var pCnt = flag.Int("c", 10000, "query count")
 var pThread = flag.Int("p", 1, "parallel thread")
+var pBatchSize = flag.Int("b", 8, "batch write size")
 
 var alphabet = []byte("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
@@ -38,17 +39,20 @@ func genString(length int, r *rand.Rand) []byte {
 func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 	iSumTime[thread] = 0
 	r := rand.New(rand.NewSource(time.Now().Unix()))
-	loops := *pCnt
+	loops := (*pCnt) / (*pBatchSize)
+	Keys := make([][]byte, *pBatchSize)
+	Values := make([][]byte, *pBatchSize)
 	for i := 0; i < loops; i++ {
-		Key := append([]byte(strconv.Itoa(thread*1000000+i)), genString(*pKeyLen, r)...)
-		var Value []byte
-		if *pValRandom == true {
-			Value = genString(*pValLen, r)
-		} else {
-			Value = append([]byte(strconv.Itoa(i)), make([]byte, *pValLen)...)
+		for j := 0; j < *pBatchSize; j++ {
+			Keys[j] = append([]byte(strconv.Itoa(thread*1000000+i)), genString(*pKeyLen, r)...)
+			if *pValRandom == true {
+				Values[j] = genString(*pValLen, r)
+			} else {
+				Values[j] = append([]byte(strconv.Itoa(i)), make([]byte, *pValLen)...)
+			}
 		}
 		t1 := time.Now().UnixNano()
-		err := n.Set(Key, Value, 0)
+		err := n.MSet(Keys, Values)
 		t2 := time.Now().UnixNano()
 		iSumTime[thread] += t2 - t1
 		if err != nil {
@@ -80,7 +84,7 @@ func main() {
 	}
 
 	opts := gonemo.NewDefaultOptions()
-	n := gonemo.OpenNemo(opts, "/tmp/kv_bench")
+	n := gonemo.OpenNemo(opts, "/tmp/kv_batch_bench")
 
 	go func() {
 		log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
