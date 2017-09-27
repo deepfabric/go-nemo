@@ -221,7 +221,7 @@ func main() {
 	}
 	//handle
 	h1 := n.GetMetaHandle()
-	err = n.PutWithHandle(h1, key, value)
+	err = n.PutWithHandle(h1, key, value, false)
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -245,7 +245,7 @@ func main() {
 	}
 	gonemo.FreeCppStr(cppStr)
 
-	err = n.DeleteWithHandle(h1, key)
+	err = n.DeleteWithHandle(h1, key, false)
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -257,7 +257,7 @@ func main() {
 	wb.WriteBatchDel([]byte("BK2"))
 	wb.WriteBatchPut([]byte("BK3"), []byte("V3"))
 	wb.WriteBatchPut([]byte("BK4"), []byte("V4"))
-	err = n.BatchWrite(h1, wb)
+	err = n.BatchWrite(h1, wb, false)
 	if err != nil {
 		fmt.Println(err)
 	} else {

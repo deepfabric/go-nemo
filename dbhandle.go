@@ -29,9 +29,9 @@ func (nemo *NEMO) GetRaftHandle() *DBNemo {
 }
 
 // BatchWrite A batch write api for meta data and raft log rocksdb instance
-func (nemo *NEMO) BatchWrite(db *DBNemo, wb *WriteBatch) error {
+func (nemo *NEMO) BatchWrite(db *DBNemo, wb *WriteBatch, sync bool) error {
 	var cErr *C.char
-	C.rocksdb_BatchWrite(nemo.c, db.c, wb.c, &cErr)
+	C.rocksdb_BatchWrite(nemo.c, db.c, wb.c, C.bool(sync), &cErr)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
@@ -41,10 +41,11 @@ func (nemo *NEMO) BatchWrite(db *DBNemo, wb *WriteBatch) error {
 }
 
 // PutWithHandle Put a key value pair with a db handle
-func (nemo *NEMO) PutWithHandle(db *DBNemo, key []byte, value []byte) error {
+func (nemo *NEMO) PutWithHandle(db *DBNemo, key []byte, value []byte, sync bool) error {
 	var cErr *C.char
 	C.nemo_PutWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)),
 		goByte2char(value), C.size_t(len(value)),
+		C.bool(sync),
 		&cErr,
 	)
 	if cErr != nil {
@@ -100,9 +101,9 @@ func (nemo *NEMO) GetWithHandleUnSafe(db *DBNemo, key []byte) ([]byte, unsafe.Po
 }
 
 // DeleteWithHandle Delete a key value pair with a db handle
-func (nemo *NEMO) DeleteWithHandle(db *DBNemo, key []byte) error {
+func (nemo *NEMO) DeleteWithHandle(db *DBNemo, key []byte, sync bool) error {
 	var cErr *C.char
-	C.nemo_DeleteWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)), &cErr)
+	C.nemo_DeleteWithHandle(nemo.c, db.c, goByte2char(key), C.size_t(len(key)), C.bool(sync), &cErr)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
