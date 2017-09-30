@@ -68,6 +68,7 @@ func (nemo *NEMO) GetWithHandle(db *DBNemo, key []byte) ([]byte, error) {
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
+		C.nemo_delCppStr(cCppStr)
 		return nil, res
 	}
 

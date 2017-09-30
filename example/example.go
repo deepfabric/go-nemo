@@ -131,6 +131,16 @@ func main() {
 		fmt.Println(err)
 	}
 
+	resIndexInfo, indexRes, err := n.HGetIndexInfo([]byte("HIndexInfoNotExists"))
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		if indexRes == -1 {
+			fmt.Println("success to get a non-exists index key")
+		} else {
+			fmt.Println("fail to get a non-exists key")
+		}
+	}
 	indexInfo := []byte("indexInfo")
 	err = n.HSetIndexInfo(Hkey, indexInfo)
 	if err != nil {
@@ -138,13 +148,18 @@ func main() {
 	} else {
 		fmt.Println("success to HSetIndexInfo")
 	}
-	resIndexInfo, err := n.HGetIndexInfo(Hkey)
+	resIndexInfo, indexRes, err = n.HGetIndexInfo(Hkey)
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		if equal(indexInfo, resIndexInfo) {
-			fmt.Println("success to HGetIndexInfo")
+		if indexRes == 0 {
+			if equal(indexInfo, resIndexInfo) {
+				fmt.Println("success to HGetIndexInfo")
+			} else {
+				fmt.Printf("get index info[%s] wrong\n", string(resIndexInfo))
+			}
 		} else {
+			fmt.Println("fail to get a Index key")
 			fmt.Printf("get index info[%s] wrong\n", string(resIndexInfo))
 		}
 	}

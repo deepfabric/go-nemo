@@ -19,6 +19,7 @@ func (nemo *NEMO) Get(key []byte) ([]byte, error) {
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
+		C.nemo_delCppStr(cCppStr)
 		return nil, res
 	}
 	val := C.GoBytes(unsafe.Pointer(cVal), C.int(cLen))

@@ -363,23 +363,29 @@ func (nemo *NEMO) HIncrby(key []byte, field []byte, by int64) ([]byte, error) {
 }
 
 // HGetIndexInfo get a index info of the meta key
-func (nemo *NEMO) HGetIndexInfo(key []byte) ([]byte, error) {
+func (nemo *NEMO) HGetIndexInfo(key []byte) ([]byte, int, error) {
 	var cErr *C.char
 	var cIndex *C.char
 	var cLen C.size_t
+	var cRes C.int32_t
 	cCppStr := C.nemo_HGetIndexInfo(nemo.c,
 		goByte2char(key), C.size_t(len(key)),
 		&cIndex, &cLen,
+		&cRes,
 		&cErr,
 	)
 	if cErr != nil {
 		res := errors.New(C.GoString(cErr))
 		C.free(unsafe.Pointer(cErr))
-		return nil, res
+		C.nemo_delCppStr(cCppStr)
+		return nil, 0, res
 	}
-	index := C.GoBytes(unsafe.Pointer(cIndex), C.int(cLen))
+	index := []byte("")
+	if cRes == 0 {
+		index = C.GoBytes(unsafe.Pointer(cIndex), C.int(cLen))
+	}
 	C.nemo_delCppStr(cCppStr)
-	return index, nil
+	return index, int(cRes), nil
 }
 
 // HSetIndexInfo set a index info of the meta key
