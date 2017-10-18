@@ -279,6 +279,26 @@ func main() {
 		fmt.Println("success to BatchWrite")
 	}
 
+	h2 := n.GetKvHandle()
+	wb = gonemo.NewWriteBatch()
+	wb.WriteBatchDel(key)
+	wb.WriteBatchPut([]byte("KVBatch"), []byte("test"))
+	err = n.BatchWrite(h2, wb, true)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		ResValue, err = n.Get([]byte("KVBatch"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		if equal(ResValue, []byte("test")) {
+			fmt.Println("Success to KV BatchWrite")
+		} else {
+			fmt.Println("Faile to KV BatchWrite")
+			fmt.Printf("get key Hello with wrong value: [%s]\n", string(ResValue))
+		}
+	}
+
 	kit := n.KScanWithHandle(h1, []byte("A"), []byte("x"), true)
 	for ; kit.Valid(); kit.Next() {
 		fmt.Println("raw iterator ephemeral key:" + string(kit.Key()))

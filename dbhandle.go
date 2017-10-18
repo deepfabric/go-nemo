@@ -28,6 +28,13 @@ func (nemo *NEMO) GetRaftHandle() *DBNemo {
 	return &hd
 }
 
+// GetRaftHandle Return db handle of raft log
+func (nemo *NEMO) GetKvHandle() *DBNemo {
+	var hd DBNemo
+	hd.c = C.nemo_GetKvHandle(nemo.c)
+	return &hd
+}
+
 // BatchWrite A batch write api for meta data and raft log rocksdb instance
 func (nemo *NEMO) BatchWrite(db *DBNemo, wb *WriteBatch, sync bool) error {
 	var cErr *C.char
