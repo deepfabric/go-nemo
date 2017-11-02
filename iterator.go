@@ -148,12 +148,12 @@ func (it *KIterator) Free() {
 }
 
 // HmeataScan return a kv iterator
-func (nemo *NEMO) HmeataScan(start []byte, end []byte, UseSnapshot bool) *HmetaIterator {
+func (nemo *NEMO) HmeataScan(start []byte, end []byte, UseSnapshot bool, SikpNilIndex bool) *HmetaIterator {
 	var hit HmetaIterator
 	hit.c = C.nemo_HmetaScan(nemo.c,
 		goByte2char(start), C.size_t(len(start)),
 		goByte2char(end), C.size_t(len(end)),
-		C.bool(UseSnapshot),
+		C.bool(UseSnapshot), C.bool(SikpNilIndex),
 	)
 	return &hit
 }

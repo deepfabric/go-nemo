@@ -117,6 +117,20 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
+
+	Hkey = []byte("H2")
+	HSetRes, err = n.HSet(Hkey, field, value)
+	if err == nil {
+		fmt.Print("success to HSet!")
+		fmt.Println("key:" + string("H2"))
+		fmt.Println("field:" + string(field))
+		fmt.Println("value:" + string(value))
+		fmt.Print("HSetRes:")
+		fmt.Println(HSetRes)
+	} else {
+		fmt.Println(err)
+	}
+
 	//HGet
 	ResValue, err = n.HGet(Hkey, field)
 	if err == nil {
@@ -198,13 +212,23 @@ func main() {
 	}
 	gonemo.FreeCppSSVector(vp)
 
-	hmit := n.HmeataScan([]byte("A"), []byte("x"), true)
+	fmt.Println("hmeta scan skip nil index")
+	hmit := n.HmeataScan([]byte("A"), []byte("x"), true, true)
 	for ; hmit.Valid(); hmit.Next() {
 		fmt.Println("hmeta iterator key: " + string(hmit.Key()))
 		k := hmit.PooledKey()
 		fmt.Println("hmeta iterator pooled key: " + string(k))
 		gonemo.MemPool.Free(k)
 		fmt.Println("hmeta iterator indexInfo: " + string(hmit.IndexInfo()))
+	}
+	hmit.Free()
+	fmt.Println("hmeta scan, do not skip nil index")
+	hmit = n.HmeataScan([]byte("A"), []byte("x"), true, false)
+	for ; hmit.Valid(); hmit.Next() {
+		fmt.Println("hmeta iterator key: " + string(hmit.Key()))
+		k := hmit.PooledKey()
+		fmt.Println("hmeta iterator pooled key: " + string(k))
+		gonemo.MemPool.Free(k)
 	}
 	hmit.Free()
 
