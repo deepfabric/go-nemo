@@ -1,16 +1,24 @@
 {
     "rocksdb" : {
         "create_if_missing": true,
-        "write_buffer_size": 64,          "comment1-default":"MegaByte",
+        "write_buffer_size": 256,          "comment1-default":"MegaByte",
         "max_open_files": 5000,
         "use_bloomfilter": true,
         "write_threads": 71,
-        "target_file_size_base":20,       "comment2-default":"MegaByte",
+        "target_file_size_base":256,       "comment2-default":"MegaByte",
         "target_file_size_multiplier":1,
         "compression":true,
-        "max_background_flushes":1,
-        "max_background_compactions":1,
-        "max_bytes_for_level_multiplier":10
+        "max_background_flushes":4,
+        "max_background_compactions":8,
+        "max_bytes_for_level_multiplier":10,
+
+        "max_bytes_for_level_base":1024,        "comment3-default":"MegaByte",
+        "level0_slowdown_writes_trigger":20,
+        "level0_stop_writes_trigger":32,
+        "min_write_buffer_number_to_merge":2,
+        "level0_file_num_compaction_trigger":2,
+        "delayed_write_rate":2,                 "comment4-default":"MegaByte",
+        "max_write_buffer_number":16
     },
     "mem_pool" : {
         "min_mempool_chunk_size": 8,

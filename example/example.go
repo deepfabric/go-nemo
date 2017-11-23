@@ -442,7 +442,6 @@ func main() {
 	*/
 	n.Close()
 
-	opts = gonemo.NewDefaultOptions()
 	n = gonemo.OpenNemo(opts, "/tmp/go-nemo/")
 
 	err = n.IngestFile("/tmp/go-nemo-bak/")

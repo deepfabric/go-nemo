@@ -57,6 +57,14 @@ type RocksOpt struct {
 	MaxBackgroundFlushes       int  `json:"max_background_flushes"`
 	MaxBackgroundCompactions   int  `json:"max_background_compactions"`
 	MaxBytesForLevelMultiplier int  `json:"max_bytes_for_level_multiplier"`
+
+	MaxByteLevelBase        int `json:"max_bytes_for_level_base"`
+	L0SlowWriteTrigger      int `json:"level0_slowdown_writes_trigger"`
+	L0StopWriteTrigger      int `json:"level0_stop_writes_trigger"`
+	MinWriteBufNumMerge     int `json:"min_write_buffer_number_to_merge"`
+	L0FileNumCompactTrigger int `json:"level0_file_num_compaction_trigger"`
+	DelayWriteRate          int `json:"delayed_write_rate"`
+	MaxWriteBufNum          int `json:"max_write_buffer_number"`
 }
 
 // MemPoolOpt memory pool option for go-nemo
@@ -107,6 +115,14 @@ func NewOptions(nemoConf string) (*Options, *JSONOpt) {
 		max_background_flushes:         C.int(jopt.Db.MaxBackgroundFlushes),
 		max_background_compactions:     C.int(jopt.Db.MaxBackgroundCompactions),
 		max_bytes_for_level_multiplier: C.int(jopt.Db.MaxBytesForLevelMultiplier),
+
+		max_bytes_for_level_base:           C.int(jopt.Db.MaxByteLevelBase * 1024 * 1024),
+		level0_slowdown_writes_trigger:     C.int(jopt.Db.L0SlowWriteTrigger),
+		level0_stop_writes_trigger:         C.int(jopt.Db.L0StopWriteTrigger),
+		min_write_buffer_number_to_merge:   C.int(jopt.Db.MinWriteBufNumMerge),
+		level0_file_num_compaction_trigger: C.int(jopt.Db.L0FileNumCompactTrigger),
+		delayed_write_rate:                 C.int(jopt.Db.DelayWriteRate * 1024 * 1024),
+		max_write_buffer_number:            C.int(jopt.Db.MaxWriteBufNum),
 	}
 
 	C.nemo_SetOptions(cOpts, &goOpts)

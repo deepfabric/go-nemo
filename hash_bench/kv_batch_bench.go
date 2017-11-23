@@ -15,6 +15,7 @@ import (
 	"time"
 
 	gonemo "github.com/deepfabric/go-nemo"
+	"github.com/golang/glog"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
@@ -42,6 +43,11 @@ func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 	loops := (*pCnt) / (*pBatchSize)
 	Keys := make([][]byte, *pBatchSize)
 	Values := make([][]byte, *pBatchSize)
+
+	statisticThreshold := 10000
+	writeCount := 0
+	var sumTime int64
+
 	for i := 0; i < loops; i++ {
 		for j := 0; j < *pBatchSize; j++ {
 			Keys[j] = append([]byte(strconv.Itoa(thread*1000000+i)), genString(*pKeyLen, r)...)
@@ -54,7 +60,25 @@ func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 		t1 := time.Now().UnixNano()
 		err := n.MSet(Keys, Values)
 		t2 := time.Now().UnixNano()
-		iSumTime[thread] += t2 - t1
+
+		latency := t2 - t1
+		sumTime += latency
+		writeCount += *pBatchSize
+
+		iSumTime[thread] += latency
+		if writeCount >= statisticThreshold {
+			glog.V(2).Infof("per %v key sum time %v ms\n", statisticThreshold, sumTime/1000000)
+			glog.Flush()
+			writeCount = 0
+			sumTime = 0
+		}
+
+		latencyMs := int(latency / 1000000)
+		if latencyMs > 1 {
+			glog.V(4).Infof("big latency[%v]ms\n", latencyMs)
+			glog.Flush()
+		}
+
 		if err != nil {
 			fmt.Println("Set Err!")
 		}

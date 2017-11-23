@@ -15,12 +15,13 @@ import (
 	"time"
 
 	gonemo "github.com/deepfabric/go-nemo"
+	"github.com/golang/glog"
 )
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile `file`")
 var memprofile = flag.String("memprofile", "", "write memory profile to `file`")
 var pKeyLen = flag.Int("k", 10, "length for key")
-var pValLen = flag.Int("v", 20, "length for value")
+var pValLen = flag.Int("vlength", 20, "length for value")
 var pValRandom = flag.Bool("r", false, "random value")
 var pCnt = flag.Int("c", 10000, "query count")
 var pThread = flag.Int("p", 1, "parallel thread")
@@ -39,6 +40,11 @@ func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 	iSumTime[thread] = 0
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 	loops := *pCnt
+
+	statisticThreshold := 10000
+	writeCount := 0
+	var sumTime int64
+
 	for i := 0; i < loops; i++ {
 		Key := append([]byte(strconv.Itoa(thread*1000000+i)), genString(*pKeyLen, r)...)
 		var Value []byte
@@ -50,7 +56,24 @@ func opThread(iSumTime []int64, thread int, done chan int, n *gonemo.NEMO) {
 		t1 := time.Now().UnixNano()
 		err := n.Set(Key, Value, 0)
 		t2 := time.Now().UnixNano()
-		iSumTime[thread] += t2 - t1
+
+		latency := t2 - t1
+		sumTime += latency
+		writeCount += 1
+		iSumTime[thread] += latency
+		if writeCount >= statisticThreshold {
+			glog.V(2).Infof("per %v key sum time %v ms\n", statisticThreshold, sumTime/1000000)
+			glog.Flush()
+			writeCount = 0
+			sumTime = 0
+		}
+
+		latencyMs := int(latency / 1000000)
+		if latencyMs > 1 {
+			glog.V(4).Infof("big latency[%v]ms\n", latencyMs)
+			glog.Flush()
+		}
+
 		if err != nil {
 			fmt.Println("Set Err!")
 		}
