@@ -41,4 +41,9 @@ __Ubuntu__
     git clone --recursive https://github.com/deepfabric/go-nemo
     go install .
 ```
+# Caveat
 If you want to minimize the object size, use go build flag : -ldflags "-s -w".
+
+The [c-go build tool](https://golang.org/cmd/cgo/) can only compile c or cpp files in the same directory with go file. So you can see many soft-link files in [c-nemo's](https://github.com/deepfabric/c-nemo) top level directory.
+
+There are hundreds of cpp files in rocksdb to build together. For now go build tool only runs one thread to complie the cpp files. It will take a few minutes to complete first time build from scratch.
