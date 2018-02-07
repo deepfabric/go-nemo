@@ -13,5 +13,32 @@ We add some new feature to nemo for our special use case.
 
 - __data ingest api for online migrate.__ We use rocksdb 'ingest api' to bulk load external data into current nome instance.
 
+# How to build
+* Linux with go version higher than 1.8
 
- 
+* Install c++ build tools and c++ dependency libraries.
+
+__CentOS__
+
+```
+    yum group install "Development Tools"
+    yum install  snappy-devel zlib-devel bzip2-devel gtest-devel jemalloc-devel
+```
+
+__Ubuntu__
+
+```
+    apt-get install build-essential  
+    apt-get install libsnappy-dev zlib1g-dev libbz2-dev libgtest-dev libjemalloc-dev
+```
+
+* Install go package
+
+```
+    git clone https://github.com/deepfabric/c-nemo
+    cd c-nemo
+    go install .
+    git clone --recursive https://github.com/deepfabric/go-nemo
+    go install .
+```
+If you want to minimize the object size, use go build flag : -ldflags "-s -w".
