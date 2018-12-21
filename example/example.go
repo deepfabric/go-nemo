@@ -212,6 +212,15 @@ func main() {
 	}
 	gonemo.FreeCppSSVector(vp)
 
+	fmt.Println("hash scan")
+	hit := n.HScan([]byte("H2"), []byte("A"), []byte("x"), true)
+	fmt.Println("hash iterator key: " + string(hit.Key()))
+	for ; hit.Valid(); hit.Next() {
+		fmt.Println("hash iterator field: " + string(hit.Field()))
+		fmt.Println("hash iterator value: " + string(hit.Value()))
+	}
+	hit.Free()
+
 	fmt.Println("hmeta scan skip nil index")
 	hmit := n.HmeataScan([]byte("A"), []byte("x"), true, true)
 	for ; hmit.Valid(); hmit.Next() {

@@ -14,6 +14,11 @@ type KIterator struct {
 	c *C.nemo_KIteratorRO_t
 }
 
+// KIterator is hash db data info iterator
+type HIterator struct {
+	c *C.nemo_HIterator_t
+}
+
 // HmetaIterator is hash db meta info iterator
 type HmetaIterator struct {
 	c *C.nemo_HmetaIterator_t
@@ -147,7 +152,73 @@ func (it *KIterator) Free() {
 	C.KROIteratorFree(it.c)
 }
 
-// HmeataScan return a kv iterator
+// HScan return a hash data iterator
+func (nemo *NEMO) HScan(key []byte, start []byte, end []byte, UseSnapshot bool) *HIterator {
+	var hit HIterator
+	hit.c = C.nemo_HScan(nemo.c,
+		goByte2char(key), C.size_t(len(key)),
+		goByte2char(start), C.size_t(len(start)),
+		goByte2char(end), C.size_t(len(end)),
+		C.bool(UseSnapshot), 
+	)
+	return &hit
+}
+
+// Next Move the iterator to the next element
+func (it *HIterator) Next() {
+	C.HNext(it.c)
+}
+
+// Valid Return true if the iterator is valid
+func (it *HIterator) Valid() bool {
+	return bool(C.HValid(it.c))
+}
+
+// Key Return the hash table key
+func (it *HIterator) Key() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	cRes = C.HKey(it.c, &cLen)
+
+	var k []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&k))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return k
+}
+
+// Field Return the hash table field, just valid at current iterator cursor
+func (it *HIterator)Field() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	cRes = C.HField(it.c, &cLen)
+
+	var f []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&f))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return f
+}
+
+// Value Return the hash table value, just valid at current iterator cursor
+func (it *HIterator)Value() []byte {
+	var cRes *C.char
+	var cLen C.size_t
+
+	cRes = C.HValue(it.c, &cLen)
+
+	var v []byte
+	sH := (*reflect.SliceHeader)(unsafe.Pointer(&v))
+	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
+	return v
+}
+
+// Free Release the iterator
+func (it *HIterator) Free() {
+	C.HIteratorFree(it.c)
+}
+
+// HmeataScan return a hash meta iterator
 func (nemo *NEMO) HmeataScan(start []byte, end []byte, UseSnapshot bool, SikpNilIndex bool) *HmetaIterator {
 	var hit HmetaIterator
 	hit.c = C.nemo_HmetaScan(nemo.c,
