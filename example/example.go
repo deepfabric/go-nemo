@@ -7,7 +7,7 @@ package main
 import "C"
 import (
 	"fmt"
-
+	"bytes"
 	gonemo "github.com/deepfabric/go-nemo"
 )
 
@@ -189,8 +189,8 @@ func main() {
 	fmt.Println("HMGet result:")
 	for i, err := range errs {
 		fmt.Println(err)
-		fmt.Println("field" + string(fields[i]))
-		fmt.Println("value" + string(ResVals[i]))
+		fmt.Println("field:" + string(fields[i]))
+		fmt.Println("value:" + string(ResVals[i]))
 		if equal(vals[i], ResVals[i]) {
 			fmt.Printf("get value[%d] correct\n", i)
 		} else {
@@ -202,8 +202,8 @@ func main() {
 	fmt.Println("HMGet result:")
 	for i, err := range errs {
 		fmt.Println(err)
-		fmt.Println("field" + string(fields[i]))
-		fmt.Println("value" + string(ResVals[i]))
+		fmt.Println("field:" + string(fields[i]))
+		fmt.Println("value:" + string(ResVals[i]))
 		if equal(vals[i], ResVals[i]) {
 			fmt.Printf("get value[%d] correct\n", i)
 		} else {
@@ -213,11 +213,31 @@ func main() {
 	gonemo.FreeCppSSVector(vp)
 
 	fmt.Println("hash scan")
-	hit := n.HScan([]byte("H2"), []byte("A"), []byte("x"), true)
+	field = []byte("f1")
+	value = []byte("1")
+	HSetRes, err = n.HSet(Hkey, field, value)
+        if(err!=nil) {
+		fmt.Println(err)
+	}
+	field = []byte("f2")
+	value = []byte("2")
+	HSetRes, err = n.HSet(Hkey, field, value)
+        if(err!=nil) {
+		fmt.Println(err)
+	}
+	field = []byte("f3")
+	value = []byte("3")
+	HSetRes, err = n.HSet(Hkey, field, value)
+        if(err!=nil) {
+		fmt.Println(err)
+	}
+	hit := n.HScan(Hkey, []byte("f1"), []byte("f4"), true)
 	fmt.Println("hash iterator key: " + string(hit.Key()))
 	for ; hit.Valid(); hit.Next() {
-		fmt.Println("hash iterator field: " + string(hit.Field()))
-		fmt.Println("hash iterator value: " + string(hit.Value()))
+                if !bytes.Equal([]byte("f1"), hit.Field()){
+			fmt.Println("hash iterator field: " + string(hit.Field()))
+			fmt.Println("hash iterator value: " + string(hit.Value()))
+		}
 	}
 	hit.Free()
 

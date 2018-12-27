@@ -197,7 +197,11 @@ func (it *HIterator)Field() []byte {
 	var f []byte
 	sH := (*reflect.SliceHeader)(unsafe.Pointer(&f))
 	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
-	return f
+
+        resSlice := make([]byte, sH.Len)
+        copy(resSlice,f)
+
+	return resSlice
 }
 
 // Value Return the hash table value, just valid at current iterator cursor
@@ -210,7 +214,11 @@ func (it *HIterator)Value() []byte {
 	var v []byte
 	sH := (*reflect.SliceHeader)(unsafe.Pointer(&v))
 	sH.Cap, sH.Len, sH.Data = int(cLen), int(cLen), uintptr(unsafe.Pointer(cRes))
-	return v
+
+	resSlice := make([]byte, sH.Len)
+        copy(resSlice,v)
+
+	return resSlice
 }
 
 // Free Release the iterator
