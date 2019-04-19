@@ -65,6 +65,8 @@ type RocksOpt struct {
 	L0FileNumCompactTrigger int `json:"level0_file_num_compaction_trigger"`
 	DelayWriteRate          int `json:"delayed_write_rate"`
 	MaxWriteBufNum          int `json:"max_write_buffer_number"`
+
+	DisableWAL bool `json:"disable_wal"`
 }
 
 // MemPoolOpt memory pool option for go-nemo
@@ -123,6 +125,7 @@ func NewOptions(nemoConf string) (*Options, *JSONOpt) {
 		level0_file_num_compaction_trigger: C.int(jopt.Db.L0FileNumCompactTrigger),
 		delayed_write_rate:                 C.int(jopt.Db.DelayWriteRate * 1024 * 1024),
 		max_write_buffer_number:            C.int(jopt.Db.MaxWriteBufNum),
+		disable_wal:                        C.bool(jopt.Db.DisableWAL),
 	}
 
 	C.nemo_SetOptions(cOpts, &goOpts)

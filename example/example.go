@@ -6,8 +6,9 @@ package main
 // #include <stdlib.h>
 import "C"
 import (
-	"fmt"
 	"bytes"
+	"fmt"
+
 	gonemo "github.com/deepfabric/go-nemo"
 )
 
@@ -32,6 +33,7 @@ func main() {
 	} else {
 		fmt.Println(err)
 	}
+	// time.Sleep(3600 * time.Second)
 	//Get
 	ResValue, err := n.Get(key)
 	if err == nil {
@@ -216,25 +218,25 @@ func main() {
 	field = []byte("f1")
 	value = []byte("1")
 	HSetRes, err = n.HSet(Hkey, field, value)
-        if(err!=nil) {
+	if err != nil {
 		fmt.Println(err)
 	}
 	field = []byte("f2")
 	value = []byte("2")
 	HSetRes, err = n.HSet(Hkey, field, value)
-        if(err!=nil) {
+	if err != nil {
 		fmt.Println(err)
 	}
 	field = []byte("f3")
 	value = []byte("3")
 	HSetRes, err = n.HSet(Hkey, field, value)
-        if(err!=nil) {
+	if err != nil {
 		fmt.Println(err)
 	}
 	hit := n.HScan(Hkey, []byte("f1"), []byte("f4"), true)
 	fmt.Println("hash iterator key: " + string(hit.Key()))
 	for ; hit.Valid(); hit.Next() {
-                if !bytes.Equal([]byte("f1"), hit.Field()){
+		if !bytes.Equal([]byte("f1"), hit.Field()) {
 			fmt.Println("hash iterator field: " + string(hit.Field()))
 			fmt.Println("hash iterator value: " + string(hit.Value()))
 		}
@@ -469,6 +471,7 @@ func main() {
 			return
 		}
 	*/
+	// time.Sleep(3600 * time.Second)
 	n.Close()
 
 	n = gonemo.OpenNemo(opts, "/tmp/go-nemo/")
