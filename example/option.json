@@ -19,7 +19,7 @@
         "level0_file_num_compaction_trigger":2,
         "delayed_write_rate":2,                 "comment4-default":"MegaByte",
         "max_write_buffer_number":16,
-        "disable_wal":true
+        "disable_wal":false
     },
     "mem_pool" : {
         "min_mempool_chunk_size": 8,
