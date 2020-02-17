@@ -183,6 +183,59 @@ func (nemo *NEMO) MSet(keys [][]byte, vals [][]byte) error {
 	return nil
 }
 
+// BatchWriteTTL write batch kvs with put or del operation
+// input slice keys, vals, ops, ttls must align
+// op: 0 for put, 1 for del, otherwise return error
+// ttl: 0 permanent, negative return error, time unit second
+func (nemo *NEMO) BatchWriteTTL(keys [][]byte, vals [][]byte, ops []int32, ttls []int32, sync bool) error {
+	var cErr *C.char
+	l := len(keys)
+	l2 := len(vals)
+	l3 := len(ops)
+	l4 := len(ttls)
+	if l != l2 || l != l3 || l != l4 {
+		return errors.New("input slices don't align")
+	}
+	ckeylist := make([]*C.char, l)
+	ckeylen := make([]C.size_t, l)
+	cvallist := make([]*C.char, l)
+	cvallen := make([]C.size_t, l)
+
+	for i, key := range keys {
+		ckeylist[i] = goBytedup2char(key)
+		ckeylen[i] = C.size_t(len(key))
+	}
+	for i, val := range vals {
+		cvallist[i] = goBytedup2char(val)
+		cvallen[i] = C.size_t(len(val))
+	}
+
+	C.nemo_WriteBatchTtl(nemo.c, C.int(l),
+		(**C.char)(unsafe.Pointer(&ckeylist[0])),
+		(*C.size_t)(unsafe.Pointer(&ckeylen[0])),
+		(**C.char)(unsafe.Pointer(&cvallist[0])),
+		(*C.size_t)(unsafe.Pointer(&cvallen[0])),
+		(*C.int32_t)(unsafe.Pointer(&ops[0])),
+		(*C.int32_t)(unsafe.Pointer(&ttls[0])),
+		C.bool(sync),
+		&cErr,
+	)
+
+	for _, key := range ckeylist {
+		C.free(unsafe.Pointer(key))
+	}
+	for _, val := range cvallist {
+		C.free(unsafe.Pointer(val))
+	}
+
+	if cErr != nil {
+		res := errors.New(C.GoString(cErr))
+		C.free(unsafe.Pointer(cErr))
+		return res
+	}
+	return nil
+}
+
 // Keys Return all keys with specified pattern
 func (nemo *NEMO) Keys(pattern []byte) ([][]byte, error) {
 	var cPattern *C.char = goByte2char(pattern)
