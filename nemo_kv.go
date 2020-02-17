@@ -186,7 +186,7 @@ func (nemo *NEMO) MSet(keys [][]byte, vals [][]byte) error {
 // BatchWriteTTL write batch kvs with put or del operation
 // input slice keys, vals, ops, ttls must align
 // op: 0 for put, 1 for del, otherwise return error
-// ttl: 0 permanent, negative return error, time unit second
+// ttl works if op=0: 0 permanent, negative return error, time unit second
 func (nemo *NEMO) BatchWriteTTL(keys [][]byte, vals [][]byte, ops []int32, ttls []int32, sync bool) error {
 	var cErr *C.char
 	l := len(keys)
