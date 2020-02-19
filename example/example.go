@@ -8,6 +8,7 @@ import "C"
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	gonemo "github.com/deepfabric/go-nemo"
 )
@@ -264,17 +265,17 @@ func main() {
 	hmit.Free()
 
 	//List Push
-	len, err := n.LPush([]byte("List1"), []byte("world"))
+	length, err := n.LPush([]byte("List1"), []byte("world"))
 	if err == nil {
-		fmt.Print("success to LPush!,list len:")
-		fmt.Println(len)
+		fmt.Print("success to LPush!,list length:")
+		fmt.Println(length)
 	} else {
 		fmt.Println(err)
 	}
-	len, err = n.LPush([]byte("List1"), []byte("hello"))
+	length, err = n.LPush([]byte("List1"), []byte("hello"))
 	if err == nil {
-		fmt.Print("success to LPush!,list len:")
-		fmt.Println(len)
+		fmt.Print("success to LPush!,list length:")
+		fmt.Println(length)
 	} else {
 		fmt.Println(err)
 	}
@@ -353,25 +354,55 @@ func main() {
 			fmt.Printf("get key Hello with wrong value: [%s]\n", string(ResValue))
 		}
 	}
-	ops := []int32{0, 1}
-	ttls := []int32{0, 0}
-	err = n.BatchWriteTTL(keys, vals, ops, ttls, true)
+
+	ttlKeyStrs := []string{"n1", "n2", "n3", "n4", "n4"}
+	ttlValStrs := []string{"v1", "v2", "v3", "v4", "v4"}
+	l := len(ttlKeyStrs)
+	ttlKeys := make([][]byte, l)
+	ttlVals := make([][]byte, l)
+	for i := 0; i < l; i++ {
+		ttlKeys[i] = []byte(ttlKeyStrs[i])
+		ttlVals[i] = []byte(ttlValStrs[i])
+	}
+	ops := []int32{0, 0, 0, 0, 1}
+	ttls := []int32{0, 1, 10, 0, 0}
+	err = n.BatchWriteTTL(ttlKeys, ttlVals, ops, ttls, true)
 	fmt.Print("BatchWriteTTL ")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println("batch write ok")
 	}
+	time.Sleep(time.Duration(2) * time.Second)
+
+	for i := 0; i < l; i++ {
+		fmt.Println("BatchWriteTTL read case ", string(ttlKeys[i]), string(ttlVals[i]), ops[i], ttls[i])
+		ResValue, err = n.Get(ttlKeys[i])
+		if err != nil {
+			fmt.Println("BatchWriteTTL Get err ", err)
+		} else {
+			fmt.Println("BatchWriteTTL res: ", string(ResValue))
+		}
+		kvh := n.GetKvHandle()
+		ResValue, err = n.GetWithHandle(kvh, ttlKeys[i])
+		if err != nil {
+			fmt.Println("BatchWriteTTL GetWithHandle err ", err)
+		} else {
+			fmt.Println("BatchWriteTTL res: ", string(ResValue))
+		}
+	}
+
 	ops2 := []int32{0, -1}
-	err = n.BatchWriteTTL(keys, vals, ops2, ttls, true)
+	ttls2 := []int32{0, 0}
+	err = n.BatchWriteTTL(keys, vals, ops2, ttls2, true)
 	fmt.Print("BatchWriteTTL ")
 	if err != nil {
 		fmt.Println(err)
 	} else {
 		fmt.Println("batch write ok")
 	}
-	ttls2 := []int32{-1, 0}
-	err = n.BatchWriteTTL(keys, vals, ops, ttls2, true)
+	ttls2 = []int32{-1, 0}
+	err = n.BatchWriteTTL(keys, vals, ops2, ttls2, true)
 	fmt.Print("BatchWriteTTL ")
 	if err != nil {
 		fmt.Println(err)
